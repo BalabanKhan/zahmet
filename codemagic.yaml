@@ -1,0 +1,20 @@
+workflows:
+  zahmet-workflow:
+    name: Zahmet Default Build
+    environment:
+      flutter: master
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: |
+          flutter packages pub get
+      - name: Build Android AAB
+        script: |
+          flutter build appbundle --release
+      - name: Build iOS IPA
+        script: |
+          flutter build ipa --release --no-codesign
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/ios/ipa/*.ipa
