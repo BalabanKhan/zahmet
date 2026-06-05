@@ -517,9 +517,9 @@ class AppTexts {
     ? "arka planda seni izlemek için bataryanın %4'ünü yedim. sen dürüst davranmadığın sürece şarja mahkumsun." 
     : "i ate 4% of your battery to watch you in the background. you are doomed to the charger as long as you are not honest.";
 
-  static String get endgamePost => isTr
-    ? "artık her şey anlamsız."
-    : "everything is meaningless now.";
+  static const String endgamePost = "artık hiçbir şeye sinirlenmiyorum. sen kazandın.";
+
+  static const String kekstraDailyReminder = "Hâlâ yapmadığın görevler var. Umursamazlık seviyen gerçekten göz yaşartıcı.";
 
   // ApologyScreen
   static String get apologyExpectedText => isTr 

@@ -130,7 +130,14 @@ class TaskItem extends ConsumerWidget {
                 SnackBar(
                   content: Text(AppTexts.complete, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)),
                   backgroundColor: Colors.black87,
-                  duration: const Duration(seconds: 2),
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: 'GERİ AL',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      ref.read(taskProvider.notifier).undoCompleteTask(task.id);
+                    },
+                  ),
                 ),
               );
             }

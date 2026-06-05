@@ -17,6 +17,14 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    if (project.name == "isar_flutter_libs") {
+        val androidExt = project.extensions.findByName("android")
+        if (androidExt != null) {
+            try {
+                androidExt.javaClass.getMethod("setNamespace", String::class.java).invoke(androidExt, "dev.isar.isar_flutter_libs")
+            } catch (e: Exception) {}
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

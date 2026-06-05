@@ -12,9 +12,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../providers/task_provider.dart';
 import '../providers/trip_provider.dart';
 import '../widgets/task_item.dart';
+import '../widgets/zahmet_input.dart';
 import '../services/notification_service.dart';
 import 'settings_screen.dart';
-import 'endgame_screen.dart';
 import '../l10n/app_texts.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -25,8 +25,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
-  final TextEditingController _controller = TextEditingController();
-  int _backspaceCount = 0;
   
   bool _isScreenshotDetected = false;
   bool _isShaking = false;
@@ -47,7 +45,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    NotificationService.initialize();
+    NotificationService.initialize().then((_) {
+      NotificationService.scheduleDailyReminder();
+    });
 
     _checkLastOpened();
 
@@ -102,7 +102,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
     _accelerometerSubscription?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -124,8 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     } else if (state == AppLifecycleState.resumed) {
       if (_pausedTime != null) {
         final diff = DateTime.now().difference(_pausedTime!);
-        if (diff.inSeconds > 15 && _controller.text.isNotEmpty) {
-           _controller.clear();
+        if (diff.inSeconds > 15) {
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(content: Text(AppTexts.kekstraAppSwitch, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87)
            );
@@ -149,60 +147,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     }
   }
 
-  void _handleSubmit(String text) async {
-    if (text.isEmpty) return;
-
-    final battery = Battery();
-    final level = await battery.batteryLevel;
-    if (level < 5) {
-      FocusScope.of(context).unfocus();
-      _controller.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppTexts.kekstraBattery, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87)
-      );
-      return;
-    }
-
-    final response = await ref.read(taskProvider.notifier).addTask(text);
-    
-    if (response.isEndgame) {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const EndgameScreen()));
-      return;
-    }
-
-    if (response.whisperMessage != null) {
-      FocusScope.of(context).unfocus();
-      if (!mounted) return;
-      setState(() => _whisperMessage = response.whisperMessage);
-    }
-
-    if (response.snackBarMessage != null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response.snackBarMessage!, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87));
-    }
-
-    _controller.clear();
-    _backspaceCount = 0;
-  }
-
-  void _onTextChanged(String text) {
-    if (text.length >= 60) {
-      FocusScope.of(context).unfocus();
-      _controller.text = text.substring(0, 59);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCharLimit, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87));
-      return;
-    }
-
-    _backspaceCount++;
-    if (_backspaceCount > 15) {
-      ref.read(tripProvider.notifier).increaseScore(5);
-      _backspaceCount = 0;
-      FocusScope.of(context).unfocus();
-      _controller.clear();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraBackspace, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 4)));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -311,21 +255,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         },
                       ),
               ),
-              Container(
-                padding: const EdgeInsets.all(24),
-                child: TextField(
-                  controller: _controller,
-                  onSubmitted: _handleSubmit,
-                  onChanged: _onTextChanged,
-                  style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.black87),
-                  decoration: InputDecoration(
-                    hintText: AppTexts.hintText,
-                    hintStyle: GoogleFonts.roboto(color: const Color(0xFFBDBDBD), fontWeight: FontWeight.w300),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
-                ),
+              ZahmetInputWidget(
+                onWhisperMessage: (msg) {
+                  if (mounted) {
+                    setState(() => _whisperMessage = msg);
+                  }
+                },
               ),
             ],
           ),

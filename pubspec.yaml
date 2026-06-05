@@ -50,6 +50,7 @@ dependencies:
   sensors_plus: ^7.0.0
   battery_plus: ^7.0.0
   screen_capture_event: ^1.2.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

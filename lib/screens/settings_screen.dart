@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/task_provider.dart';
 import '../providers/trip_provider.dart';
 import '../l10n/app_texts.dart';
@@ -37,17 +38,22 @@ class SettingsScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              AppTexts.privacyMessage,
-                              style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12),
-                            ),
-                            backgroundColor: Colors.black87,
-                            duration: const Duration(seconds: 4),
-                          ),
-                        );
+                      onTap: () async {
+                        final Uri url = Uri.parse('https://docs.google.com/document/d/e/2PACX-1vTCK5kiIirw33dAAol_SyvUEQSFVEdpVqCacT2pxDVPEqWq16Efk951s5YN-nj8S4UkpmCPYCc49d5U/pub');
+                        if (!await launchUrl(url)) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  AppTexts.privacyMessage,
+                                  style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12),
+                                ),
+                                backgroundColor: Colors.black87,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          }
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16.0),

@@ -204,6 +204,32 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     return null;
   }
 
+  Future<void> undoCompleteTask(Id id) async {
+    TaskModel? taskToComplete;
+    if (kIsWeb) {
+      taskToComplete = DatabaseService.webMockTasks.firstWhere((t) => t.id == id);
+    } else {
+      taskToComplete = await DatabaseService.isar!.taskModels.get(id);
+    }
+
+    if (taskToComplete != null) {
+      if (kIsWeb) {
+        taskToComplete.isDeleted = false;
+        taskToComplete.deletedAt = null;
+        taskToComplete.completedAt = null;
+      } else {
+        await DatabaseService.isar!.writeTxn(() async {
+          taskToComplete!.isDeleted = false;
+          taskToComplete.deletedAt = null;
+          taskToComplete.completedAt = null;
+          await DatabaseService.isar!.taskModels.put(taskToComplete);
+        });
+      }
+      ref.read(tripProvider.notifier).increaseScore(5);
+      await _loadTasks();
+    }
+  }
+
   Future<String?> postponeTask(Id id) async {
     String? message;
     if (kIsWeb) {

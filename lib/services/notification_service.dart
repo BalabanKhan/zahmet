@@ -41,6 +41,36 @@ class NotificationService {
     );
   }
 
+  static Future<void> scheduleDailyReminder() async {
+    if (kIsWeb) return;
+    
+    // Schedule for 8:00 PM every day
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20);
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _notificationsPlugin.zonedSchedule(
+      id: 1, // Use a different ID from time bomb
+      title: 'Zahmet',
+      body: AppTexts.kekstraDailyReminder ?? 'Hâlâ yapmadığın görevler var, umursamazlık seviyen göz yaşartıcı.',
+      scheduledDate: scheduledDate,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_channel',
+          'Daily Reminders',
+          channelDescription: 'daily passive aggressive reminders',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
   static Future<void> cancelTimeBomb() async {
     if (kIsWeb) return;
     await _notificationsPlugin.cancel(id: 0);
