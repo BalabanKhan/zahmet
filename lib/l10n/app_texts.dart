@@ -488,6 +488,7 @@ class AppTexts {
   static String get nlpDefaultReaction => isTr ? "muhtemelen yalan" : "probably a lie";
 
   // TaskItem
+  static String get undoAction => isTr ? "YALAN SÖYLEDİM" : "I LIED";
   static List<String> get cameraKeywords => isTr ? ["topla", "temizle", "yıka"] : ["clean", "tidy", "wash"];
   static String get cameraThreat => isTr 
     ? "yazdığın o 'odayı topladım' yalanlarına inanacağımı düşünmedin herhalde? şimdi sana bir sistem uyarısı göndereceğim. kamerana erişim ver ki o pasaklı odanı görebileyim." 

@@ -132,7 +132,7 @@ class TaskItem extends ConsumerWidget {
                   backgroundColor: Colors.black87,
                   duration: const Duration(seconds: 4),
                   action: SnackBarAction(
-                    label: 'GERİ AL',
+                    label: AppTexts.undoAction,
                     textColor: Colors.white,
                     onPressed: () {
                       ref.read(taskProvider.notifier).undoCompleteTask(task.id);
