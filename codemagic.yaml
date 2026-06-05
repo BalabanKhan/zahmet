@@ -19,9 +19,9 @@ workflows:
               echo "Patched $ISAR_GRADLE"
             fi
           fi
-      - name: Set iOS deployment target to 13.0
+      - name: Set iOS deployment target to 14.0
         script: |
-          sed -i.bak -e 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' ios/Runner.xcodeproj/project.pbxproj || true
+          sed -i.bak -e 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' ios/Runner.xcodeproj/project.pbxproj || true
       - name: Build Android AAB
         script: |
           flutter build appbundle --release
