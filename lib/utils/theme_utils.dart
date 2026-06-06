@@ -7,16 +7,16 @@ class ThemeUtils {
     if (state == TripState.aestheticTorture) {
       return GoogleFonts.comicNeue(
         fontSize: fontSize,
-        fontWeight: FontWeight.w400,
-        color: const Color(0xFFBDBDBD),
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF757575),
       );
     }
     
     // Normal & PassiveAggressive state
     return GoogleFonts.roboto(
       fontSize: fontSize,
-      fontWeight: FontWeight.w300, // Very thin
-      color: const Color(0xFFBDBDBD), // Careless pale grey
+      fontWeight: FontWeight.w500, // Very thin
+      color: const Color(0xFF757575), // Careless pale grey, but slightly darker
     );
   }
 }

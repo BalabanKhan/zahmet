@@ -31,7 +31,7 @@ class PermissionScreen extends ConsumerWidget {
           SnackBar(
             content: Text(
               AppTexts.permissionPermanentlyDenied,
-              style: GoogleFonts.inter(fontWeight: FontWeight.w200, color: Colors.white, fontSize: 12),
+              style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 12),
             ),
             backgroundColor: Colors.black87,
             duration: const Duration(seconds: 4),
@@ -48,7 +48,7 @@ class PermissionScreen extends ConsumerWidget {
           SnackBar(
             content: Text(
               AppTexts.permissionDenied,
-              style: GoogleFonts.inter(fontWeight: FontWeight.w200, color: Colors.white, fontSize: 12),
+              style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 12),
             ),
             backgroundColor: Colors.black87,
             duration: const Duration(seconds: 4),
@@ -72,7 +72,7 @@ class PermissionScreen extends ConsumerWidget {
               Text(
                 threatMessage,
                 style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w200,
+                  fontWeight: FontWeight.w500,
                   fontSize: 16,
                   height: 1.5,
                 ),
@@ -90,7 +90,7 @@ class PermissionScreen extends ConsumerWidget {
                     AppTexts.permissionShowPrompt,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w100,
+                      fontWeight: FontWeight.w500,
                       fontSize: 12,
                     ),
                   ),
@@ -109,7 +109,7 @@ class PermissionScreen extends ConsumerWidget {
                     AppTexts.permissionAfraid,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w100,
+                      fontWeight: FontWeight.w500,
                       fontSize: 12,
                       color: Colors.white,
                     ),

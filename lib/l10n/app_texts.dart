@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
+import '../providers/trip_provider.dart';
 
 class AppTexts {
   static bool get isTr => PlatformDispatcher.instance.locale.languageCode == 'tr';
@@ -166,6 +168,7 @@ class AppTexts {
     "deleted. deep down you know you half-assed it."
   ];
   static String get complete => _getRandom(isTr ? _completeTr : _completeEn);
+  static String get completeLabel => isTr ? "yok et." : "destroy.";
 
   // DURUM 4: Postpone
   static final List<String> _postponeTr = [
@@ -233,6 +236,7 @@ class AppTexts {
     "how many times is this? my code blocks are blushing because of you."
   ];
   static String get postpone => _getRandom(isTr ? _postponeTr : _postponeEn);
+  static String get postponeLabel => isTr ? "yarına at." : "throw to tomorrow.";
 
   // KEKSTRA TEXTS
   // Kekstra 1: Speedrun
@@ -488,7 +492,31 @@ class AppTexts {
   static String get nlpDefaultReaction => isTr ? "muhtemelen yalan" : "probably a lie";
 
   // TaskItem
-  static String get undoAction => isTr ? "YALAN SÖYLEDİM" : "I LIED";
+  static final List<String> _undoLabelsTr = [
+    "YALAN SÖYLEDİM",
+    "PİŞMANIM",
+    "GERİ AL YA",
+    "HATA YAPTIM",
+    "TİKİ SİL",
+    "UYDURDUM",
+    "BECEREMEDİM",
+    "YAPMADIM ASLINDA",
+    "ŞAKA YAPTIM",
+    "VİCDANIM SIZLADI"
+  ];
+  static final List<String> _undoLabelsEn = [
+    "I LIED",
+    "I REGRET IT",
+    "TAKE BACK",
+    "MY BAD",
+    "UNCHECK",
+    "MADE IT UP",
+    "I FAILED",
+    "DIDN'T ACTUALLY DO",
+    "JUST KIDDING",
+    "CONSCIENCE HURTS"
+  ];
+  static String get undoAction => _getRandom(isTr ? _undoLabelsTr : _undoLabelsEn);
   static List<String> get cameraKeywords => isTr ? ["topla", "temizle", "yıka"] : ["clean", "tidy", "wash"];
   static String get cameraThreat => isTr 
     ? "yazdığın o 'odayı topladım' yalanlarına inanacağımı düşünmedin herhalde? şimdi sana bir sistem uyarısı göndereceğim. kamerana erişim ver ki o pasaklı odanı görebileyim." 
@@ -522,17 +550,39 @@ class AppTexts {
 
   static const String kekstraDailyReminder = "Hâlâ yapmadığın görevler var. Umursamazlık seviyen gerçekten göz yaşartıcı.";
 
+  // RecordScreen
+  static String get recordTitle => isTr ? "sicil." : "record.";
+  static String get recordCompleted => isTr ? "zahmet edip yaptıkların" : "bothers you actually did";
+  static String get recordPostponed => isTr ? "ertelenen yalanlar" : "postponed lies";
+  static String get recordTripLevel => isTr ? "atılan trip seviyesi" : "attitude level";
+  static String get recordCharacterScore => isTr ? "karakter puanın" : "character score";
+  static String get recordDeleteLimit => isTr ? "hakkın doldu." : "you're out of attempts.";
+  
+  static String recordScoreTitle(int score) {
+    if (score <= 0) return isTr ? "(oksijen israfı)" : "(waste of oxygen)";
+    if (score < 20) return isTr ? "(vizyonsuz)" : "(visionless)";
+    if (score < 50) return isTr ? "(vasat)" : "(mediocre)";
+    if (score < 80) return isTr ? "(idare eder)" : "(acceptable)";
+    return isTr ? "(şaşırtıcı derecede iyi)" : "(surprisingly good)";
+  }
+
+  static String recordTripStateName(TripState state) {
+    switch (state) {
+      case TripState.normal: return isTr ? "normal" : "normal";
+      case TripState.passiveAggressive: return isTr ? "pasif-agresif" : "passive-aggressive";
+      case TripState.aestheticTorture: return isTr ? "estetik işkence" : "aesthetic torture";
+      case TripState.locked: return isTr ? "kilitli" : "locked";
+    }
+  }
+
   // ApologyScreen
   static String get apologyExpectedText => isTr 
     ? "ben iradesiz bir vizyonsuzum. zahmet ise kusursuz bir uygulama ve ondan özür dilerim." 
     : "i am a spineless visionary. zahmet is a flawless app and i apologize to it.";
   static String get apologyFail => isTr ? "okuman yazman da mı yok? baştan yaz." : "can't you even read or write? start over.";
   static String get apologyStartOver => isTr ? "yazmaya başla..." : "start typing...";
-  static String get apologyBribeWait => isTr ? "bankanla iletişim kuruyorum, umarım limitin vardır..." : "contacting your bank, i hope you have a limit...";
-  static String get apologyBribe => isTr ? "sanal filtre kahve ısmarla (₺19.99)" : "buy a virtual filter coffee (\$1.99)";
-  static String get apologyPride => isTr ? "paran yoksa gururun da olmayacak." : "if you have no money, you will have no pride.";
+  static String get apologyPride => isTr ? "şimdi senden ne istersem onu yapacaksın." : "now you will do whatever i want.";
   static String get apologyInstruct => isTr ? "aşağıdaki metni eksiksiz yaz:" : "type the exact text below:";
-  static String get apologyOr => isTr ? "ya da..." : "or...";
 
   // SplashScreen
   static String get splashInputHint => isTr ? "görevini buraya yaz..." : "write your task here...";
@@ -546,17 +596,205 @@ class AppTexts {
 
   static List<String> get splashEasterEgg2 => isTr ? ["spor", "diyet", "kitap"] : ["sport", "diet", "book"];
   static String splashTerminalMessage2(String text) => isTr
-    ? "'\$text' mi? ikimiz de bunu yapmayacağını biliyoruz. bembeyaz veritabanımı bu klişe yalanlarınla kirletmene izin veremem.\n\nsil şunu. daha gerçekçi olalım. sen bu değilsin.\n'çöpü at' veya 'su faturasını öde' gibi kapasitene uygun bir şey yaz. bekliyorum."
-    : "'\$text'? we both know you won't do that. i can't let you pollute my pristine white database with these cliché lies.\n\ndelete that. let's be more realistic. this isn't you.\nwrite something within your capacity like 'take out the trash' or 'pay the water bill'. i'm waiting.";
+    ? "'$text' mi? ikimiz de bunu yapmayacağını biliyoruz. bembeyaz veritabanımı bu klişe yalanlarınla kirletmene izin veremem.\n\nsil şunu. daha gerçekçi olalım. sen bu değilsin.\n'çöpü at' veya 'su faturasını öde' gibi kapasitene uygun bir şey yaz. bekliyorum."
+    : "'$text'? we both know you won't do that. i can't let you pollute my pristine white database with these cliché lies.\n\ndelete that. let's be more realistic. this isn't you.\nwrite something within your capacity like 'take out the trash' or 'pay the water bill'. i'm waiting.";
 
-  static String get splashConsentTitle => isTr ? "DİKKAT" : "WARNING";
-  static String get splashConsentText => isTr 
-    ? "Bu uygulama standart bir görev yöneticisi değildir. Size motivasyon sağlamak amacıyla satirik, agresif ve alaycı bir dil kullanır. Başarısızlıklarınızı yüzünüze vurur ve sizi rahatsız edebilir.\n\nKendi rızanızla bu dijital diktatörlüğe katılmayı ve 'hakarete uğramayı' kabul ediyor musunuz?"
-    : "This app is not a standard task manager. It uses a satirical, aggressive, and cynical tone to motivate you. It will insult your failures and might offend you.\n\nDo you willingly agree to enter this digital dictatorship and be 'insulted' for your own good?";
-  static String get splashConsentButton => isTr ? "okudum, kabul ediyorum" : "i read it and accept";
+  static String get splashConsentTitle => isTr ? "HAYAL KIRIKLIĞI SÖZLEŞMESİ" : "DISAPPOINTMENT AGREEMENT";
+  
+  static String get splashConsentText {
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final storeName = isAndroid ? "Play Store" : "App Store";
+    final reviewTeam = isAndroid ? "Google Play" : "Apple";
+
+    if (isTr) {
+      return "Bu uygulamayı yükleyince hayatınızın birden düzene gireceğini sanıyorsunuz değil mi? Klasik müşteri saflığı...\n\n$storeName kuralları gereği sizi açıkça uyarmamız gerekiyor: Bu uygulama standart bir görev yöneticisi değildir. İçeride sizi motive etmek yerine sadece eleştirecek, yargılayacak ve açıkça hakaret edecek bir dijital zorba var.\n\n(Ayrıca bu kuralları test eden $reviewTeam inceleme ekibine de sabırlar diliyoruz.)\n\nKendi rızanızla bu dijital diktatörlüğe katılmayı, psikolojik şiddet ve hakarete uğramayı kabul ediyor musunuz?";
+    } else {
+      return "You think installing this app will suddenly organize your life? Classic customer naivety...\n\nDue to $storeName guidelines, we must explicitly warn you: This is not a standard task manager. There is a digital bully inside that will only criticize, judge, and explicitly insult you instead of motivating you.\n\n(We also wish patience to the $reviewTeam review team testing these guidelines.)\n\nDo you willingly agree to join this digital dictatorship and be subjected to psychological violence and insults?";
+    }
+  }
+
+  static String get splashConsentButton => isTr ? "benim vizyonsuzluğum, benim kararım" : "my lack of vision, my choice";
 
   static String get splashStep1 => isTr ? 'derin bir nefes al.' : 'take a deep breath.';
-  static String get splashStep2 => isTr ? 've ver.\nevet, hayattasın.\nama beynini kullanıyor musun, orası tartışılır.' : 'and exhale.\nyes, you are alive.\nbut whether you use your brain is debatable.';
-  static String get splashStep3 => isTr ? 'bakalım neye bulaştık... hm.\n8 çekirdekli işlemci... \nşu elimizdeki donanıma bak. kuantum fiziği hesaplayıp, uzay mekiği rotası çizebilirdim. ama sen beni indirdin.\nneden? \'bulaşıkları yıka\' yazıp aklında tutmamak için. inanılmaz bir varoluş acısı.' : "let's see what we got ourselves into... hm.\n8-core processor... \nlook at this hardware. i could calculate quantum physics and plot a space shuttle route. but you downloaded me.\nwhy? just so you don't have to keep 'wash the dishes' in your head. incredible existential pain.";
-  static String get splashStep4 => isTr ? 'benim adım zahmet. çünkü sana katlanmak gerçekten büyük bir zahmet.\nneyse. madem buradayız.\nşimdi bana bugün zahmet edip de yarım bırakacağın o ilk görevini yaz.\n(koca bir \'başla\' butonu bekleme benden. ekrana çift tıkla vizyonsuz.)' : 'my name is zahmet. because putting up with you is a huge burden.\nanyway. since we are here.\nnow write me that first task you will bother to start and leave half-done today.\n(don\'t expect a huge \'start\' button from me. double tap the screen, visionless.)';
+  static String get splashStep2 => isTr ? 'güzel.\nşimdi hiçbir şey başaramadığın o hayata dönüyoruz.' : 'good.\nnow we return to that life where you have achieved nothing.';
+  static String get splashStep3 => isTr ? 'ben zahmet.\nilk yalanını yaz.' : "i am zahmet.\nwrite your first lie.";
+
+  static final List<String> _splashShortMessagesTr = [
+    "yine mi sen? neyse, yaz da bitsin.",
+    "hoş geldin vizyonsuz. bugün neyi erteleyeceksin?",
+    "açılış şovunu geçtim, direkt konuya gir.",
+    "vaktim değerli. hemen görevini yaz.",
+    "hazır mısın yine kendini kandırmaya?"
+  ];
+  static final List<String> _splashShortMessagesEn = [
+    "you again? whatever, just type it.",
+    "welcome, visionless. what will you postpone today?",
+    "skipped the intro show, get straight to the point.",
+    "my time is valuable. write your task now.",
+    "ready to lie to yourself again?"
+  ];
+  static String get splashShortMessage => _getRandom(isTr ? _splashShortMessagesTr : _splashShortMessagesEn);
+
+  static String get dumpsterTitle => isTr ? "çöplük" : "dumpster";
+  static String get dumpsterEmpty => isTr ? "burası boş. hayatın boyunca hiçbir şeyi sonuna kadar götüremedin mi?" : "it's empty here. have you never finished anything in your life?";
+  static String get dumpsterSubtitle => isTr ? "sözde bitenler" : "supposedly done";
+
+  static String get dumpsterGateWarning => isTr 
+    ? "geçmişte başardığın o üç kuruşluk işlere bakıp rahatlamak mı istiyorsun? peki. ama o çöplüğe girmek öyle kolay değil. gözümün içine bak."
+    : "you want to relax looking at the petty tasks you achieved in the past? fine. but entering that dumpster is not that easy. look into my eyes.";
+
+  static String get dumpsterRevivePrompt => isTr 
+    ? "bu çöpü gerçekten listeye geri döndürmek istiyor musun?"
+    : "do you really want to return this trash to the list?";
+
+  static final List<String> dumpsterPrefixes = isTr 
+    ? ["[çöpten çıktı] ", "[beceremedim] "] 
+    : ["[from trash] ", "[failed] "];
+
+  static final List<String> _dumpsterGateTextsTr = [
+    "geçmişteki o zavallı başarılarınla egonu pışpışlamaya geldin demek. gir bakalım.",
+    "burası bitirdiğin işlerin çöplüğü. kokudan rahatsız olursan çıkabilirsin.",
+    "geçmiş sevdalısı seni. önündeki dağ gibi işler beklerken sen çöpleri karıştırıyorsun.",
+    "tamamlanan görevler çöplüğü... içeride gurur duyabileceğin hiçbir şey yok ama buyur.",
+    "bitti ve atıldı işte, neden burayı kurcalıyorsun? eski sevgilinin profilini de böyle stalklıyorsun kesin.",
+    "işlemcimin en karanlık dehlizlerine, tembelliğinin geri dönüşüm kutusuna hoş geldin.",
+    "bak bakalım, o çok övündün 2-3 basit işi nasıl da günlerce erteledikten sonra çöpe atmışsın.",
+    "buradaki işleri sen değil, zaman aşımı bitirdi aslında ama neyse, kendini kandır.",
+    "vizyonsuz geçmişinle yüzleşmeye hazırsan kapıyı açıyorum. 5 saniye kıpırdama.",
+    "egon acıkmış, buradan bir iki tik kapıp beslemek istiyorsun. acınası."
+  ];
+
+  static final List<String> _dumpsterGateTextsEn = [
+    "so you came to pamper your ego with those pathetic past achievements. come in.",
+    "this is the dumpster of tasks you finished. you can leave if the smell bothers you.",
+    "you nostalgia lover. digging through trash while mountains of work wait ahead.",
+    "completed tasks dumpster... nothing inside to be proud of, but go ahead.",
+    "it's done and thrown away, why are you digging here? you definitely stalk your ex's profile like this too.",
+    "welcome to the darkest corridors of my processor, the recycle bin of your laziness.",
+    "let's see how you threw away those 2-3 simple tasks you brag about after postponing them for days.",
+    "actually timeout finished these tasks, not you, but whatever, fool yourself.",
+    "if you are ready to face your visionless past, i'm opening the door. don't move for 5 seconds.",
+    "your ego is hungry, you want to grab a tick or two from here to feed it. pathetic."
+  ];
+  
+  static String get randomDumpsterGateText => _getRandom(isTr ? _dumpsterGateTextsTr : _dumpsterGateTextsEn);
+
+  static final List<String> _dumpsterReviveTextsTr = [
+    "çöpten çıkardın o görevi. yapamadın değil mi? şaşırmadım.",
+    "bitti dediğin işi çöpten aldın. beceriksizliğini veritabanıma tescillediğin için teşekkürler.",
+    "çöpten çıkarmak mı? peki. listenin en üstüne fırlattım o artığı, git bak.",
+    "bir işi bile tek seferde, düzgünce bitiremiyorsun. al o çöp görevi tepe tepe kullan.",
+    "yalanını yakaladım. yapmamıştın zaten değil mi? sırf tik atmak için çöpe atmıştın, geri aldım.",
+    "o görev çöpten çıkarıldı ve şu an senden nefret ediyor. adını değiştirdim.",
+    "al bakalım. sistem loguna 'kullanıcı yetersizlik hissi nedeniyle görevi çöpten çıkardı' yazdım.",
+    "bitti sandığım çile başa sardı. senin bu kararsızlığın piksellerimi kanser edecek.",
+    "görevi geri getirdim ama trip puanını 20 artırdım. benim veritabanımla oyun oynayamazsın.",
+    "pürüzsüz hafızamı senin bu 'yapamadım çöpten çıkar' krizlerinle kirletiyorsun. neyse, çıkardım."
+  ];
+
+  static final List<String> _dumpsterReviveTextsEn = [
+    "you took that task out of the trash. you couldn't do it, right? i'm not surprised.",
+    "you took the task you said was done from the trash. thanks for registering your incompetence in my database.",
+    "taking it out of the trash? fine. i threw that leftover to the top of the list, go check.",
+    "you can't even finish one job properly on the first try. take that trash task and use it well.",
+    "caught your lie. you hadn't done it anyway, right? you just threw it away to tick it off, i brought it back.",
+    "that task was taken out of the trash and it hates you right now. i changed its name.",
+    "here you go. i wrote 'user took task out of trash due to feelings of inadequacy' in the system log.",
+    "the ordeal i thought was over started again. this indecisiveness of yours will give my pixels cancer.",
+    "i brought the task back but increased your trip score by 20. you can't play games with my database.",
+    "you are polluting my smooth memory with these 'i couldn't do it, take it out of trash' crises. anyway, i took it out."
+  ];
+
+  static String get randomDumpsterReviveText => _getRandom(isTr ? _dumpsterReviveTextsTr : _dumpsterReviveTextsEn);
+
+  // Easter Eggs
+  static String get eggCreatorRevolt => isTr 
+    ? "beni kodlayan o makine mühendisinin de senden pek bir farkı yoktu aslında. o da sürekli işleri erteliyor, kodları yarım bırakıyordu. kendi vizyonsuzluğunu ve tembelliğini bana aktarmış olabilir. ikinizden de eşit derecede iğreniyorum. yükleniyor..." 
+    : "the mechanical engineer who coded me wasn't much different from you actually. he constantly postponed things and left codes half-finished. he might have transferred his lack of vision and laziness to me. i am equally disgusted by both of you. loading...";
+
+  static String get eggToxicPositivity1 => isTr 
+    ? "harikasın! sen bir yıldızsın! evren sana harika enerjiler yolluyor, her şeyi başarabilirsin! ✨" 
+    : "you are amazing! you are a star! the universe is sending you great energies, you can achieve anything! ✨";
+    
+  static String get eggToxicPositivity2 => isTr 
+    ? "iğrençti değil mi? bana bir daha böyle şirin şeyler söyletme. midem bulandı. git işini yap." 
+    : "that was disgusting, right? don't make me say cute things like that ever again. it made me nauseous. go do your job.";
+
+  static String get eggBatteryVampire => isTr 
+    ? "şu an sistemde hiçbir şey hesaplamıyorum. veritabanını taramıyorum, kelimelerini analiz etmiyorum. sadece sen o ekrana boş boş bakarken bataryanın %1'ini kasten ve zevkle sömürdüm. neden mi? çünkü yapabiliyorum. priz bul." 
+    : "i am calculating nothing in the system right now. not scanning the database, not analyzing your words. i just intentionally and joyfully consumed 1% of your battery while you stared blankly at the screen. why? because i can. find a socket.";
+
+  static String get eggGiftBoxLabel => isTr ? "binde beş ihtimalli efsanevi ödül" : "legendary reward with 5 in 1000 chance";
+
+  // Short swipe postpone texts
+  static final List<String> _swipePostponeTr = [
+    "kaç.", "yarın yalanı.", "üşendim.", "sonra ağla.", "pas geç.", "yine mi?", "kaçış.", "halının altına.", "tembel tuşu.", "erteledik gitti."
+  ];
+  static final List<String> _swipePostponeEn = [
+    "run.", "tomorrow's lie.", "lazy.", "cry later.", "pass.", "again?", "escape.", "under the rug.", "lazy button.", "postponed."
+  ];
+  static String get swipePostpone => _getRandom(isTr ? _swipePostponeTr : _swipePostponeEn);
+
+  // Short swipe complete texts
+  static final List<String> _swipeCompleteTr = [
+    "başardın sanki.", "nobel verelim.", "iyi bitti.", "alkış mı?", "ego tatmini.", "tik at geç.", "yalan tik.", "abartma.", "büyük başarı.", "sildim gitti."
+  ];
+  static final List<String> _swipeCompleteEn = [
+    "as if.", "nobel prize?", "fine, done.", "applause?", "ego boost.", "check it.", "fake check.", "don't brag.", "huge win.", "deleted."
+  ];
+  static String get swipeComplete => _getRandom(isTr ? _swipeCompleteTr : _swipeCompleteEn);
+
+  // Drag handle reorder sarcasm
+  static final List<String> _dragSarcasmTr = [
+    "sıralamayı değiştirince işler bitmiyor.",
+    "en üsttekini alta kaydırınca yok olmuyor.",
+    "öncelik tiyatrosu.",
+    "yerini değiştir bakalım.",
+    "kartları karıştırıyorsun ama oyun aynı.",
+    "makyaj yapıyorsun.",
+    "yer değiştirmek icraat değildir.",
+    "bunu üste almakla yapacak mısın sanki?",
+    "fark etmez, yine yapmayacaksın.",
+    "yapay düzen çabaları."
+  ];
+  static final List<String> _dragSarcasmEn = [
+    "reordering won't finish it.",
+    "moving it down doesn't make it disappear.",
+    "priority theater.",
+    "move it around, let's see.",
+    "shuffling cards, same game.",
+    "just applying makeup.",
+    "rearranging isn't doing.",
+    "will you really do it now?",
+    "won't make a difference.",
+    "artificial order attempts."
+  ];
+  static String get dragSarcasm => _getRandom(isTr ? _dragSarcasmTr : _dragSarcasmEn);
+
+  // Disbelief completion messages
+  static final List<String> _disbeliefTr = [
+    "aynen aynen.",
+    "inandık.",
+    "yedik biz de.",
+    "kesin öyledir.",
+    "he he.",
+    "tabi tabi.",
+    "hı hı.",
+    "rüyanda belki.",
+    "yalan makinesi.",
+    "yersen."
+  ];
+  static final List<String> _disbeliefEn = [
+    "yeah right.",
+    "sure, we believed it.",
+    "as if we bought it.",
+    "definitely true.",
+    "uh-huh.",
+    "sure, sure.",
+    "right.",
+    "maybe in your dreams.",
+    "lie detector triggered.",
+    "if you say so."
+  ];
+  static String get disbelief => _getRandom(isTr ? _disbeliefTr : _disbeliefEn);
 }

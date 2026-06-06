@@ -34,6 +34,9 @@ class ZahmetApp extends StatelessWidget {
           primary: Colors.black,
           surface: Colors.white,
         ),
+        snackBarTheme: const SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+        ),
       ),
       home: const SplashScreen(),
     );

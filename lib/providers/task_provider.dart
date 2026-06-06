@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
@@ -6,6 +7,7 @@ import '../models/task_model.dart';
 import '../services/database_service.dart';
 import '../services/nlp_service.dart';
 import 'trip_provider.dart';
+import 'stats_provider.dart';
 import '../l10n/app_texts.dart';
 
 class AddTaskResponse {
@@ -29,13 +31,46 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
   }
 
   Future<void> _loadTasks() async {
+    final now = DateTime.now();
+    bool needsUpdate = false;
+
     if (kIsWeb) {
+      for (var t in DatabaseService.webMockTasks) {
+        if (t.isPostponed && !t.isDeleted) {
+          final pDate = t.postponedAt ?? t.createdAt;
+          if (now.difference(pDate).inDays >= 1 || now.day != pDate.day) {
+            t.isPostponed = false;
+            t.text = "[DÜN YALAN SÖYLEDİN] ${t.text.replaceFirst('hayal: ', '')}";
+            needsUpdate = true;
+          }
+        }
+      }
       state = DatabaseService.webMockTasks.where((t) => !t.isDeleted).toList();
       state.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
       return;
     }
+
     final tasks = await DatabaseService.isar!.taskModels.where().filter().isDeletedEqualTo(false).sortByOrderIndex().findAll();
-    state = tasks;
+    
+    await DatabaseService.isar!.writeTxn(() async {
+      for (var t in tasks) {
+        if (t.isPostponed) {
+          final pDate = t.postponedAt ?? t.createdAt;
+          if (now.difference(pDate).inDays >= 1 || now.day != pDate.day) {
+            t.isPostponed = false;
+            t.text = "[BUGÜN YAPACAKTIN] ${t.text.replaceFirst('hayal: ', '')}";
+            await DatabaseService.isar!.taskModels.put(t);
+            needsUpdate = true;
+          }
+        }
+      }
+    });
+
+    if (needsUpdate) {
+      state = await DatabaseService.isar!.taskModels.where().filter().isDeletedEqualTo(false).sortByOrderIndex().findAll();
+    } else {
+      state = tasks;
+    }
   }
 
   final List<DateTime> _addTimestamps = [];
@@ -145,6 +180,15 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     _recentCompletions.add(now);
     _recentCompletions.removeWhere((time) => now.difference(time).inSeconds > 3);
 
+    if (_recentCompletions.length == 3) {
+      // KART 3: Toksik Pozitiflik (%0.2)
+      if (Random().nextDouble() < 0.002) {
+        _recentCompletions.clear();
+        await _loadTasks();
+        return 'EGG_TOXIC_POSITIVITY';
+      }
+    }
+
     if (_recentCompletions.length >= 4) {
       _recentCompletions.clear();
       await _loadTasks();
@@ -200,11 +244,12 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     }
 
     ref.read(tripProvider.notifier).decreaseScore(5);
+    ref.read(statsProvider.notifier).incrementCompleted();
     await _loadTasks();
     return null;
   }
 
-  Future<void> undoCompleteTask(Id id) async {
+  Future<void> undoCompleteTask(Id id, {String? newText}) async {
     TaskModel? taskToComplete;
     if (kIsWeb) {
       taskToComplete = DatabaseService.webMockTasks.firstWhere((t) => t.id == id);
@@ -217,15 +262,21 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
         taskToComplete.isDeleted = false;
         taskToComplete.deletedAt = null;
         taskToComplete.completedAt = null;
+        if (newText != null) {
+          taskToComplete.text = newText;
+        }
       } else {
         await DatabaseService.isar!.writeTxn(() async {
           taskToComplete!.isDeleted = false;
           taskToComplete.deletedAt = null;
           taskToComplete.completedAt = null;
+          if (newText != null) {
+            taskToComplete.text = newText;
+          }
           await DatabaseService.isar!.taskModels.put(taskToComplete);
         });
       }
-      ref.read(tripProvider.notifier).increaseScore(5);
+      ref.read(tripProvider.notifier).increaseScore(20);
       await _loadTasks();
     }
   }
@@ -237,9 +288,10 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
       if (idx != -1) {
         final task = DatabaseService.webMockTasks[idx];
         task.isPostponed = true;
+        task.postponedAt = DateTime.now();
         task.snoozeCount++;
         if (task.snoozeCount == 5) {
-          task.text = "hayal: ${task.text}";
+          task.text = "hayal: ${task.text.replaceFirst('[BUGÜN YAPACAKTIN] ', '')}";
           message = AppTexts.kekstraZombie;
         }
       }
@@ -248,9 +300,10 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
         final task = await DatabaseService.isar!.taskModels.get(id);
         if (task != null) {
           task.isPostponed = true;
+          task.postponedAt = DateTime.now();
           task.snoozeCount++;
           if (task.snoozeCount == 5) {
-            task.text = "hayal: ${task.text}";
+            task.text = "hayal: ${task.text.replaceFirst('[BUGÜN YAPACAKTIN] ', '')}";
             message = AppTexts.kekstraZombie;
           }
           await DatabaseService.isar!.taskModels.put(task);
@@ -258,6 +311,7 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
       });
     }
     ref.read(tripProvider.notifier).increaseScore(15);
+    ref.read(statsProvider.notifier).incrementPostponed();
     await _loadTasks();
     return message;
   }

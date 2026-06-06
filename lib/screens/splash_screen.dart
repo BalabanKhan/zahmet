@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +23,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   String _terminalMessage = '';
+  bool _isSkipped = false;
 
   @override
   void initState() {
@@ -30,39 +32,72 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   void _checkConsent() async {
+    // KART 2: Yaratıcıya İsyan (%0.1)
+    if (Random().nextDouble() < 0.001) {
+      setState(() {
+        _terminalMessage = AppTexts.eggCreatorRevolt;
+      });
+      await Future.delayed(const Duration(seconds: 5));
+      if (mounted) {
+        setState(() {
+          _terminalMessage = '';
+        });
+      }
+    }
+
     const storage = FlutterSecureStorage();
-    final consented = await storage.read(key: 'hasConsented');
+    final consented = await storage.read(key: 'hasConsented_v2');
     if (consented == 'true') {
-      _startSequence();
+      final seenIntro = await storage.read(key: 'seenIntro');
+      if (seenIntro == 'true') {
+        _startShortSequence();
+      } else {
+        _startSequence();
+      }
     } else {
       if (!mounted) return;
       setState(() => _step = -1);
     }
   }
 
-  void _startSequence() async {
+  void _startShortSequence() async {
     if (!mounted) return;
     setState(() => _step = 0);
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _step = 5);
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
+    setState(() => _showInput = true);
+  }
+
+  void _startSequence() async {
+    const storage = FlutterSecureStorage();
+    await storage.write(key: 'seenIntro', value: 'true');
+    
+    if (!mounted || _isSkipped) return;
+    setState(() => _step = 0);
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (!mounted || _isSkipped) return;
     setState(() => _step = 1);
     
-    await Future.delayed(const Duration(seconds: 4));
-    if (!mounted) return;
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (!mounted || _isSkipped) return;
+    setState(() => _step = -99); // Brief empty space for breathing room
+
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted || _isSkipped) return;
     setState(() => _step = 2);
 
     HapticFeedback.heavyImpact();
     
-    await Future.delayed(const Duration(seconds: 4));
-    if (!mounted) return;
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted || _isSkipped) return;
     setState(() => _step = 3);
 
-    await Future.delayed(const Duration(seconds: 5));
-    if (!mounted) return;
-    setState(() => _step = 4);
-
-    await Future.delayed(const Duration(seconds: 4));
-    if (!mounted) return;
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted || _isSkipped) return;
     setState(() => _showInput = true);
   }
 
@@ -98,7 +133,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       backgroundColor: Colors.white,
       body: GestureDetector(
         onTap: () {
-          if (_showInput && _focusNode.hasFocus) {
+          if (_step >= 0 && !_showInput) {
+            _isSkipped = true;
+            setState(() {
+              _step = -99;
+              _showInput = true;
+            });
+          } else if (_showInput && _focusNode.hasFocus) {
             FocusScope.of(context).unfocus();
           }
         },
@@ -165,11 +206,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       controller: _controller,
                       focusNode: _focusNode,
                       onSubmitted: _handleSubmit,
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w200, fontSize: 16),
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 16),
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         hintText: AppTexts.splashInputHint,
-                        hintStyle: GoogleFonts.inter(fontWeight: FontWeight.w100, color: Colors.grey),
+                        hintStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.grey),
                       ),
                       cursorColor: Colors.black,
                       cursorWidth: 1,
@@ -202,7 +243,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ),
             onPressed: () async {
               const storage = FlutterSecureStorage();
-              await storage.write(key: 'hasConsented', value: 'true');
+              await storage.write(key: 'hasConsented_v2', value: 'true');
               _startSequence();
             },
             child: Text(AppTexts.splashConsentButton, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
@@ -214,6 +255,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     String text = '';
     switch (_step) {
       case 0:
+      case -99:
         return const SizedBox.shrink();
       case 1:
         text = AppTexts.splashStep1;
@@ -224,8 +266,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       case 3:
         text = AppTexts.splashStep3;
         break;
-      case 4:
-        text = AppTexts.splashStep4;
+      case 5:
+        text = AppTexts.splashShortMessage;
         break;
     }
 
@@ -234,7 +276,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       key: ValueKey<int>(_step),
       textAlign: TextAlign.center,
       style: GoogleFonts.inter(
-        fontWeight: FontWeight.w200,
+        fontWeight: FontWeight.w500,
         fontSize: 16,
         color: Colors.black,
         height: 1.5,

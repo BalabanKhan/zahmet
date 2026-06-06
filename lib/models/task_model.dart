@@ -16,6 +16,7 @@ class TaskModel {
 
   DateTime createdAt = DateTime.now();
   DateTime? completedAt;
+  DateTime? postponedAt;
   int snoozeCount = 0;
   int orderIndex = 0;
 }

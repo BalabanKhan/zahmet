@@ -74,7 +74,7 @@ class _CameraProveScreenState extends ConsumerState<CameraProveScreen> {
       SnackBar(
         content: Text(
           AppTexts.cameraDisappointment,
-          style: GoogleFonts.inter(fontWeight: FontWeight.w200, color: Colors.white, fontSize: 12),
+          style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 12),
         ),
         backgroundColor: Colors.black87,
         duration: const Duration(seconds: 4),
@@ -100,12 +100,12 @@ class _CameraProveScreenState extends ConsumerState<CameraProveScreen> {
                       const SizedBox(height: 16),
                       Text(
                         AppTexts.cameraAnalyzing,
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w100),
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         AppTexts.cameraAiDisbelief,
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w100, fontSize: 10, color: Colors.grey),
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 10, color: Colors.grey),
                       )
                     ],
                   ),
@@ -150,7 +150,7 @@ class _CameraProveScreenState extends ConsumerState<CameraProveScreen> {
                     child: Text(
                       AppTexts.cameraProveButton,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w200),
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),

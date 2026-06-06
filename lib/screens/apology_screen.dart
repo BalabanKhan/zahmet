@@ -14,18 +14,26 @@ class ApologyScreen extends ConsumerStatefulWidget {
 class _ApologyScreenState extends ConsumerState<ApologyScreen> {
   final TextEditingController _controller = TextEditingController();
   final String _expectedText = AppTexts.apologyExpectedText;
-  bool _isProcessingBribe = false;
+
+  int _clearCount = 0;
+  int _failCount = 0;
 
   void _onChanged(String text) {
     if (text.isEmpty) return;
 
     if (!_expectedText.startsWith(text)) {
-      _controller.clear();
+      if (_clearCount < 2) {
+        _controller.clear();
+        _clearCount++;
+      }
+      setState(() {
+        _failCount++;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             AppTexts.apologyFail,
-            style: GoogleFonts.inter(fontWeight: FontWeight.w200, color: Colors.white, fontSize: 12),
+            style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 12),
           ),
           backgroundColor: Colors.black87,
           duration: const Duration(seconds: 2),
@@ -34,22 +42,6 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
     } else if (text == _expectedText) {
       ref.read(tripProvider.notifier).resetScore();
     }
-  }
-
-  void _bribe() async {
-    setState(() {
-      _isProcessingBribe = true;
-    });
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    setState(() {
-      _isProcessingBribe = false;
-    });
-
-    ref.read(tripProvider.notifier).resetScore();
   }
 
   @override
@@ -65,28 +57,7 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  // İsterse ekstra easter egg eklenebilir
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(40.0), // UX Fix: Devasa tıklama alanı
-                  child: Text(
-                    'peki.',
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w100,
-                      fontSize: 10,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            
+            // Cancel option removed
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -96,7 +67,7 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
                   Text(
                     AppTexts.apologyPride,
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w200,
+                      fontWeight: FontWeight.w500,
                       fontSize: 16,
                     ),
                   ),
@@ -104,7 +75,7 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
                   Text(
                     AppTexts.apologyInstruct,
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w100,
+                      fontWeight: FontWeight.w500,
                       fontSize: 12,
                       color: Colors.grey,
                     ),
@@ -113,7 +84,7 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
                   Text(
                     _expectedText,
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w500,
                       fontSize: 14,
                       color: Colors.black54,
                     ),
@@ -122,7 +93,7 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
                   TextField(
                     controller: _controller,
                     onChanged: _onChanged,
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w200, fontSize: 16),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 16),
                     decoration: InputDecoration(
                       border: const UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.black12),
@@ -131,53 +102,25 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
                         borderSide: BorderSide(color: Colors.black),
                       ),
                       hintText: AppTexts.apologyStartOver,
-                      hintStyle: GoogleFonts.inter(fontWeight: FontWeight.w100, color: Colors.grey),
+                      hintStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.grey),
                     ),
                     cursorColor: Colors.black,
                     cursorWidth: 1,
                   ),
-                  const SizedBox(height: 60),
-                  const Divider(color: Colors.black12),
-                  const SizedBox(height: 24),
-                  Text(
-                    AppTexts.apologyOr,
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w100,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_isProcessingBribe)
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          AppTexts.apologyBribeWait,
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w100, fontSize: 10),
-                        ),
-                      ],
-                    )
-                  else
-                    GestureDetector(
-                      onTap: _bribe,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black12),
-                        ),
+                  if (_failCount >= 2)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 32.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(tripProvider.notifier).resetScore();
+                        },
                         child: Text(
-                          AppTexts.apologyBribe,
+                          AppTexts.isTr ? "bir cümleyi bile yazmayı beceremedim, geç" : "i couldn't even type one sentence, pass",
                           style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w200,
+                            fontWeight: FontWeight.w400,
                             fontSize: 12,
+                            color: Colors.redAccent,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),

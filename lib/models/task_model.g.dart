@@ -15,7 +15,7 @@ extension GetTaskModelCollection on Isar {
 
 const TaskModelSchema = CollectionSchema(
   name: r'Task',
-  id: 2998003626758701373,
+  id: 2998003626758701568,
   properties: {
     r'completedAt': PropertySchema(
       id: 0,
@@ -52,13 +52,18 @@ const TaskModelSchema = CollectionSchema(
       name: r'orderIndex',
       type: IsarType.long,
     ),
-    r'snoozeCount': PropertySchema(
+    r'postponedAt': PropertySchema(
       id: 7,
+      name: r'postponedAt',
+      type: IsarType.dateTime,
+    ),
+    r'snoozeCount': PropertySchema(
+      id: 8,
       name: r'snoozeCount',
       type: IsarType.long,
     ),
     r'text': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'text',
       type: IsarType.string,
     )
@@ -100,8 +105,9 @@ void _taskModelSerialize(
   writer.writeBool(offsets[4], object.isDeleted);
   writer.writeBool(offsets[5], object.isPostponed);
   writer.writeLong(offsets[6], object.orderIndex);
-  writer.writeLong(offsets[7], object.snoozeCount);
-  writer.writeString(offsets[8], object.text);
+  writer.writeDateTime(offsets[7], object.postponedAt);
+  writer.writeLong(offsets[8], object.snoozeCount);
+  writer.writeString(offsets[9], object.text);
 }
 
 TaskModel _taskModelDeserialize(
@@ -119,8 +125,9 @@ TaskModel _taskModelDeserialize(
   object.isDeleted = reader.readBool(offsets[4]);
   object.isPostponed = reader.readBool(offsets[5]);
   object.orderIndex = reader.readLong(offsets[6]);
-  object.snoozeCount = reader.readLong(offsets[7]);
-  object.text = reader.readString(offsets[8]);
+  object.postponedAt = reader.readDateTimeOrNull(offsets[7]);
+  object.snoozeCount = reader.readLong(offsets[8]);
+  object.text = reader.readString(offsets[9]);
   return object;
 }
 
@@ -146,8 +153,10 @@ P _taskModelDeserializeProp<P>(
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -579,6 +588,78 @@ extension TaskModelQueryFilter
     });
   }
 
+  QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition>
+      postponedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'postponedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition>
+      postponedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'postponedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition> postponedAtEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'postponedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition>
+      postponedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'postponedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition> postponedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'postponedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition> postponedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'postponedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<TaskModel, TaskModel, QAfterFilterCondition> snoozeCountEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -855,6 +936,18 @@ extension TaskModelQuerySortBy on QueryBuilder<TaskModel, TaskModel, QSortBy> {
     });
   }
 
+  QueryBuilder<TaskModel, TaskModel, QAfterSortBy> sortByPostponedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postponedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterSortBy> sortByPostponedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postponedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskModel, TaskModel, QAfterSortBy> sortBySnoozeCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'snoozeCount', Sort.asc);
@@ -978,6 +1071,18 @@ extension TaskModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<TaskModel, TaskModel, QAfterSortBy> thenByPostponedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postponedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskModel, TaskModel, QAfterSortBy> thenByPostponedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postponedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskModel, TaskModel, QAfterSortBy> thenBySnoozeCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'snoozeCount', Sort.asc);
@@ -1047,6 +1152,12 @@ extension TaskModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TaskModel, TaskModel, QDistinct> distinctByPostponedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'postponedAt');
+    });
+  }
+
   QueryBuilder<TaskModel, TaskModel, QDistinct> distinctBySnoozeCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'snoozeCount');
@@ -1108,6 +1219,12 @@ extension TaskModelQueryProperty
   QueryBuilder<TaskModel, int, QQueryOperations> orderIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'orderIndex');
+    });
+  }
+
+  QueryBuilder<TaskModel, DateTime?, QQueryOperations> postponedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'postponedAt');
     });
   }
 

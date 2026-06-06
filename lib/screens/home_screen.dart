@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -14,7 +15,9 @@ import '../providers/trip_provider.dart';
 import '../widgets/task_item.dart';
 import '../widgets/zahmet_input.dart';
 import '../services/notification_service.dart';
-import 'settings_screen.dart';
+import 'apology_screen.dart';
+import 'dumpster_screen.dart';
+import 'record_screen.dart';
 import '../l10n/app_texts.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -29,7 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   bool _isScreenshotDetected = false;
   bool _isShaking = false;
   StreamSubscription? _accelerometerSubscription;
-  final ScreenCaptureEvent screenListener = ScreenCaptureEvent();
+  ScreenCaptureEvent? screenListener;
   DateTime? _pausedTime;
   
   final ScrollController _scrollController = ScrollController();
@@ -51,10 +54,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
     _checkLastOpened();
 
-    screenListener.addScreenShotListener((filePath) {
-      setState(() => _isScreenshotDetected = true);
-    });
-    screenListener.watch();
+    if (!kIsWeb) {
+      screenListener = ScreenCaptureEvent();
+      screenListener!.addScreenShotListener((filePath) {
+        setState(() => _isScreenshotDetected = true);
+      });
+      screenListener!.watch();
+    }
 
     _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
       final gX = event.x.abs();
@@ -63,7 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         if (!_isShaking) {
           setState(() => _isShaking = true);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppTexts.kekstraShake, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87)
+            SnackBar(content: Text(AppTexts.kekstraShake, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
           );
           Future.delayed(const Duration(seconds: 3), () {
             if (mounted) setState(() => _isShaking = false);
@@ -78,7 +84,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       if (_scrollAnxietyCount > 30) {
         setState(() => _scrollLocked = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppTexts.kekstraAnxietyScroll, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87)
+          SnackBar(content: Text(AppTexts.kekstraAnxietyScroll, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
+        );
+      }
+
+      // KART 5: Büyük Ödül (%0.1)
+      if (Random().nextDouble() < 0.001) {
+        showDialog(
+          context: context,
+          builder: (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                showDialog(
+                  context: context,
+                  builder: (ctx2) => Dialog(
+                    backgroundColor: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(48.0),
+                      child: Text(".", textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 48, color: Colors.black)),
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.amber,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amberAccent, width: 4),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.card_giftcard, size: 64, color: Colors.white),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppTexts.eggGiftBoxLabel,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         );
       }
     });
@@ -104,6 +155,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     WidgetsBinding.instance.removeObserver(this);
     _accelerometerSubscription?.cancel();
     _scrollController.dispose();
+    if (!kIsWeb) {
+      screenListener?.dispose();
+    }
     super.dispose();
   }
 
@@ -121,11 +175,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         );
       }
     } else if (state == AppLifecycleState.resumed) {
+      // KART 4: Şarj Vampiri (%0.5)
+      if (Random().nextDouble() < 0.005) {
+        HapticFeedback.heavyImpact();
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Colors.black,
+              content: Text(
+                AppTexts.eggBatteryVampire,
+                style: GoogleFonts.firaCode(color: Colors.redAccent, fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(AppTexts.isTr ? "tamam" : "ok", style: GoogleFonts.inter(color: Colors.white54)),
+                )
+              ],
+            ),
+          );
+        }
+      }
+
       if (_pausedTime != null) {
         final diff = DateTime.now().difference(_pausedTime!);
         if (diff.inSeconds > 15) {
            ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(AppTexts.kekstraAppSwitch, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87)
+             SnackBar(content: Text(AppTexts.kekstraAppSwitch, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
            );
         }
       }
@@ -136,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           SnackBar(
             content: Text(
               AppTexts.kekstraPaste,
-              style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12),
+              style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
             ),
             backgroundColor: Colors.black87,
             duration: const Duration(seconds: 3),
@@ -169,7 +247,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
             if (diff >= 3 && (lower.contains('kargo') || lower.contains('iade') || lower.contains('trendyol'))) {
                if (mounted) {
                  setState(() => _cargoAlertShown = true);
-                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCargo, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 5)));
+                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCargo, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 5)));
                }
                break;
             }
@@ -182,25 +260,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     Widget mainUI = Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
           child: Column(
             children: [
-              Container(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+              Padding(
+                padding: const EdgeInsets.only(left: 24, top: 12, right: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DumpsterScreen()));
+                      },
+                      child: Container(
+                        color: Colors.transparent,
+                        padding: const EdgeInsets.only(top: 12, bottom: 12, right: 24),
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.rectangle),
+                        ),
+                      ),
                     ),
-                  ),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecordScreen()));
+                      },
+                      child: Container(
+                        color: Colors.transparent,
+                        padding: const EdgeInsets.only(top: 12, bottom: 12, left: 24),
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (isOrphan)
@@ -209,7 +309,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                   child: Text(
                     AppTexts.kekstraOrphan,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: Colors.black45, fontSize: 16, height: 1.5),
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: Colors.black45, fontSize: 16, height: 1.5),
                   ),
                 ),
               Expanded(
@@ -218,7 +318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         color: Colors.black,
                         backgroundColor: Colors.white,
                         onRefresh: () async {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraPullRefresh, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraPullRefresh, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
                         },
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -227,7 +327,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                             Center(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                                child: Text(AppTexts.emptyTasks, textAlign: TextAlign.center, style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), height: 1.5)),
+                                child: Text(AppTexts.emptyTasks, textAlign: TextAlign.center, style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), height: 1.5)),
                               ),
                             ),
                           ],
@@ -240,16 +340,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         itemCount: tasks.length,
                         onReorder: (oldIndex, newIndex) async {
                            final msg = await ref.read(taskProvider.notifier).reorderTasks(oldIndex, newIndex);
-                           if (msg != null && mounted) {
-                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 12)), backgroundColor: Colors.black87));
+                           if (mounted) {
+                             final finalMsg = msg ?? AppTexts.dragSarcasm;
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(
+                                 content: Text(
+                                   finalMsg,
+                                   style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
+                                 ),
+                                 backgroundColor: Colors.black87,
+                               ),
+                             );
                            }
                         },
+                        buildDefaultDragHandles: false,
                         itemBuilder: (context, index) {
-                          return Container(
+                          return ReorderableDelayedDragStartListener(
                             key: ValueKey(tasks[index].id),
+                            index: index,
                             child: Transform.scale(
                               scale: isOrphan ? 1.15 : 1.0,
-                              child: TaskItem(task: tasks[index])
+                              child: TaskItem(task: tasks[index], index: index)
                             ),
                           );
                         },
@@ -278,7 +389,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
             padding: const EdgeInsets.all(32),
             child: Material(
               color: Colors.transparent,
-              child: Text(AppTexts.kekstraScreenshot, textAlign: TextAlign.center, style: GoogleFonts.roboto(fontWeight: FontWeight.w300, color: const Color(0xFFBDBDBD), fontSize: 18)),
+              child: Text(AppTexts.kekstraScreenshot, textAlign: TextAlign.center, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 18)),
             ),
           ),
         ],
@@ -309,7 +420,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                 child: Text(
                   _whisperMessage!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.roboto(fontWeight: FontWeight.w100, color: Colors.black87, fontSize: 18, height: 1.5),
+                  style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: Colors.black87, fontSize: 18, height: 1.5),
                 ),
               ),
             ),
