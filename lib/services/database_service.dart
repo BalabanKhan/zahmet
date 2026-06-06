@@ -29,8 +29,6 @@ class DatabaseService {
         return;
       }
 
-      // If there is a schema mismatch (e.g. Collection id is invalid), Isar will throw.
-      // We can delete the old database and try again.
       debugPrint('[ZAHMET_LOG] Isar open failed, attempting to clear database: $e');
       
       final existingInstance = Isar.getInstance();
@@ -39,10 +37,14 @@ class DatabaseService {
       }
 
       try {
-        final coreFile = File('${dir.path}/default.isar');
-        if (coreFile.existsSync()) coreFile.deleteSync();
-        final lockFile = File('${dir.path}/default.isar.lock');
-        if (lockFile.existsSync()) lockFile.deleteSync();
+        final d = Directory(dir.path);
+        if (d.existsSync()) {
+          for (var f in d.listSync()) {
+            if (f.path.endsWith('.isar') || f.path.endsWith('.isar.lock')) {
+               try { f.deleteSync(); } catch (_) {}
+            }
+          }
+        }
       } catch (_) {}
       
       try {
@@ -52,7 +54,13 @@ class DatabaseService {
         );
       } catch (e2) {
         debugPrint('[ZAHMET_LOG] Second attempt to open Isar failed: $e2');
-        rethrow;
+        // Ultimate fallback: If the file is locked by the OS and cannot be deleted,
+        // we use a completely new database name to bypass the corrupted locked file.
+        isar = await Isar.open(
+          [TaskModelSchema],
+          directory: dir.path,
+          name: 'zahmet_recovery',
+        );
       }
     }
   }
