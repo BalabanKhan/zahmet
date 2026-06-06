@@ -11,6 +11,11 @@ class DatabaseService {
   static Future<void> initialize() async {
     if (kIsWeb) return; // Isar 3.1.0 doesn't support Web
     
+    if (Isar.getInstance() != null) {
+      isar = Isar.getInstance();
+      return;
+    }
+
     final dir = await getApplicationDocumentsDirectory();
     
     try {
@@ -19,9 +24,20 @@ class DatabaseService {
         directory: dir.path,
       );
     } catch (e) {
+      if (e.toString().contains('already been opened')) {
+        isar = Isar.getInstance();
+        return;
+      }
+
       // If there is a schema mismatch (e.g. Collection id is invalid), Isar will throw.
       // We can delete the old database and try again.
       debugPrint('[ZAHMET_LOG] Isar open failed, attempting to clear database: $e');
+      
+      final existingInstance = Isar.getInstance();
+      if (existingInstance != null) {
+        try { await existingInstance.close(); } catch (_) {}
+      }
+
       try {
         final coreFile = File('${dir.path}/default.isar');
         if (coreFile.existsSync()) coreFile.deleteSync();
