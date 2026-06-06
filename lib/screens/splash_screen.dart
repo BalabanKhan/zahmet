@@ -61,6 +61,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
     } catch (e) {
       debugPrint('[ZAHMET_LOG] Secure storage read failed: $e');
+      try { const storage = FlutterSecureStorage(); await storage.deleteAll(); } catch (_) {}
       if (!mounted) return;
       // Fallback to asking consent if storage is broken
       setState(() => _step = -1);
@@ -105,6 +106,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       await storage.write(key: 'seenIntro', value: 'true');
     } catch (e) {
       debugPrint('[ZAHMET_LOG] Secure storage write failed: $e');
+      try { const storage = FlutterSecureStorage(); await storage.deleteAll(); } catch (_) {}
     }
     
     if (!mounted || _isSkipped) return;
@@ -286,6 +288,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   await storage.write(key: 'hasConsented_v2', value: 'true');
                 } catch (e) {
                   debugPrint('[ZAHMET_LOG] Secure storage write failed: $e');
+                  try { const storage = FlutterSecureStorage(); await storage.deleteAll(); } catch (_) {}
                 }
                 _startSequence();
               },

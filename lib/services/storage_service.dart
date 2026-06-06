@@ -5,14 +5,24 @@ class StorageService {
   static const _tripScoreKey = 'trip_score';
 
   static Future<int> getTripScore() async {
-    final value = await _storage.read(key: _tripScoreKey);
-    if (value != null) {
-      return int.tryParse(value) ?? 0;
+    try {
+      final value = await _storage.read(key: _tripScoreKey);
+      if (value != null) {
+        return int.tryParse(value) ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      try { await _storage.deleteAll(); } catch (_) {}
+      return 0;
     }
-    return 0;
   }
 
   static Future<void> saveTripScore(int score) async {
-    await _storage.write(key: _tripScoreKey, value: score.toString());
+    try {
+      await _storage.write(key: _tripScoreKey, value: score.toString());
+    } catch (e) {
+      try { await _storage.deleteAll(); } catch (_) {}
+      try { await _storage.write(key: _tripScoreKey, value: score.toString()); } catch (_) {}
+    }
   }
 }

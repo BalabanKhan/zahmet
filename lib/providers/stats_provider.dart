@@ -37,32 +37,42 @@ class StatsNotifier extends StateNotifier<UserStats> {
   }
 
   Future<void> _loadStats() async {
-    final completed = await _storage.read(key: 'stats_completed') ?? '0';
-    final postponed = await _storage.read(key: 'stats_postponed') ?? '0';
-    final resets = await _storage.read(key: 'stats_resets') ?? '0';
+    try {
+      final completed = await _storage.read(key: 'stats_completed') ?? '0';
+      final postponed = await _storage.read(key: 'stats_postponed') ?? '0';
+      final resets = await _storage.read(key: 'stats_resets') ?? '0';
 
-    state = UserStats(
-      completedTasks: int.tryParse(completed) ?? 0,
-      postponedTasks: int.tryParse(postponed) ?? 0,
-      resetCount: int.tryParse(resets) ?? 0,
-    );
+      state = UserStats(
+        completedTasks: int.tryParse(completed) ?? 0,
+        postponedTasks: int.tryParse(postponed) ?? 0,
+        resetCount: int.tryParse(resets) ?? 0,
+      );
+    } catch (_) {
+      try { await _storage.deleteAll(); } catch (_) {}
+    }
   }
 
   Future<void> incrementCompleted() async {
     final newCount = state.completedTasks + 1;
     state = state.copyWith(completedTasks: newCount);
-    await _storage.write(key: 'stats_completed', value: newCount.toString());
+    try { await _storage.write(key: 'stats_completed', value: newCount.toString()); } catch (_) {
+      try { await _storage.deleteAll(); } catch (_) {}
+    }
   }
 
   Future<void> incrementPostponed() async {
     final newCount = state.postponedTasks + 1;
     state = state.copyWith(postponedTasks: newCount);
-    await _storage.write(key: 'stats_postponed', value: newCount.toString());
+    try { await _storage.write(key: 'stats_postponed', value: newCount.toString()); } catch (_) {
+      try { await _storage.deleteAll(); } catch (_) {}
+    }
   }
 
   Future<void> incrementResetCount() async {
     final newCount = state.resetCount + 1;
     state = state.copyWith(resetCount: newCount);
-    await _storage.write(key: 'stats_resets', value: newCount.toString());
+    try { await _storage.write(key: 'stats_resets', value: newCount.toString()); } catch (_) {
+      try { await _storage.deleteAll(); } catch (_) {}
+    }
   }
 }

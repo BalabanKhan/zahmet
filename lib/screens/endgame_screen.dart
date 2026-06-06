@@ -59,7 +59,12 @@ class _EndgameScreenState extends State<EndgameScreen> {
 
     // NO WIPE DB
     const storage = FlutterSecureStorage();
-    await storage.write(key: 'hasSeenEndgame', value: 'true');
+    try {
+      await storage.write(key: 'hasSeenEndgame', value: 'true');
+    } catch (_) {
+      try { await storage.deleteAll(); } catch (_) {}
+      try { await storage.write(key: 'hasSeenEndgame', value: 'true'); } catch (_) {}
+    }
 
     // Phase 4: Final Screen
     await Future.delayed(const Duration(seconds: 2));

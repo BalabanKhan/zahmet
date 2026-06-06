@@ -153,11 +153,15 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     
     await _loadTasks();
     
-    String? hasSeen = await _storage.read(key: 'hasSeenEndgame');
-    if (hasSeen == 'true') {
-      await _storage.write(key: 'hasSeenEndgame', value: 'acknowledged');
-      await _storage.write(key: 'totalCompleted', value: '0');
-      kekstraMessage = AppTexts.endgamePost;
+    try {
+      String? hasSeen = await _storage.read(key: 'hasSeenEndgame');
+      if (hasSeen == 'true') {
+        await _storage.write(key: 'hasSeenEndgame', value: 'acknowledged');
+        await _storage.write(key: 'totalCompleted', value: '0');
+        kekstraMessage = AppTexts.endgamePost;
+      }
+    } catch (_) {
+      try { await _storage.deleteAll(); } catch (_) {}
     }
 
     return AddTaskResponse(
@@ -169,9 +173,17 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
   final List<DateTime> _recentCompletions = [];
 
   Future<String?> completeTask(Id id) async {
-    String? countStr = await _storage.read(key: 'totalCompleted');
-    int count = (int.tryParse(countStr ?? '0') ?? 0) + 1;
-    await _storage.write(key: 'totalCompleted', value: count.toString());
+    int count = 0;
+    try {
+      String? countStr = await _storage.read(key: 'totalCompleted');
+      count = (int.tryParse(countStr ?? '0') ?? 0) + 1;
+      await _storage.write(key: 'totalCompleted', value: count.toString());
+    } catch (_) {
+      try { await _storage.deleteAll(); } catch (_) {}
+      count = 1;
+      try { await _storage.write(key: 'totalCompleted', value: '1'); } catch (_) {}
+    }
+    
     if (count == 1000) {
       return 'ENDGAME_SIGNAL';
     }
