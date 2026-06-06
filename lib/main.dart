@@ -5,11 +5,29 @@ import 'services/notification_service.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService.initialize();
-  await NotificationService.initialize();
-  
-  runApp(const ProviderScope(child: ZahmetApp()));
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await DatabaseService.initialize();
+    await NotificationService.initialize();
+    
+    runApp(const ProviderScope(child: ZahmetApp()));
+  } catch (e, stackTrace) {
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Initialization Error:\n$e\n\n$stackTrace',
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class ZahmetApp extends StatelessWidget {

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,9 +13,31 @@ class DatabaseService {
     
     final dir = await getApplicationDocumentsDirectory();
     
-    isar = await Isar.open(
-      [TaskModelSchema],
-      directory: dir.path,
-    );
+    try {
+      isar = await Isar.open(
+        [TaskModelSchema],
+        directory: dir.path,
+      );
+    } catch (e) {
+      // If there is a schema mismatch (e.g. Collection id is invalid), Isar will throw.
+      // We can delete the old database and try again.
+      debugPrint('[ZAHMET_LOG] Isar open failed, attempting to clear database: $e');
+      try {
+        final coreFile = File('${dir.path}/default.isar');
+        if (coreFile.existsSync()) coreFile.deleteSync();
+        final lockFile = File('${dir.path}/default.isar.lock');
+        if (lockFile.existsSync()) lockFile.deleteSync();
+      } catch (_) {}
+      
+      try {
+        isar = await Isar.open(
+          [TaskModelSchema],
+          directory: dir.path,
+        );
+      } catch (e2) {
+        debugPrint('[ZAHMET_LOG] Second attempt to open Isar failed: $e2');
+        rethrow;
+      }
+    }
   }
 }

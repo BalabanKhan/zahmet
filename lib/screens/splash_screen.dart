@@ -45,35 +45,67 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
     }
 
-    const storage = FlutterSecureStorage();
-    final consented = await storage.read(key: 'hasConsented_v2');
-    if (consented == 'true') {
-      final seenIntro = await storage.read(key: 'seenIntro');
-      if (seenIntro == 'true') {
-        _startShortSequence();
+    try {
+      const storage = FlutterSecureStorage();
+      final consented = await storage.read(key: 'hasConsented_v2');
+      if (consented == 'true') {
+        final seenIntro = await storage.read(key: 'seenIntro');
+        if (seenIntro == 'true') {
+          _startShortSequence();
+        } else {
+          _startSequence();
+        }
       } else {
-        _startSequence();
+        if (!mounted) return;
+        setState(() => _step = -1);
       }
-    } else {
+    } catch (e) {
+      debugPrint('[ZAHMET_LOG] Secure storage read failed: $e');
       if (!mounted) return;
+      // Fallback to asking consent if storage is broken
       setState(() => _step = -1);
     }
+  }
+
+  void _navigateToHome() {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const _RouterLayer(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 800),
+      ),
+    );
   }
 
   void _startShortSequence() async {
     if (!mounted) return;
     setState(() => _step = 0);
     await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
+    if (!mounted || _isSkipped) return;
     setState(() => _step = 5);
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
+    
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted || _isSkipped) return;
     setState(() => _showInput = true);
+
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted || _isSkipped) return;
+    if (_controller.text.isEmpty && !_focusNode.hasFocus) {
+      _isSkipped = true;
+      _navigateToHome();
+    }
   }
 
   void _startSequence() async {
-    const storage = FlutterSecureStorage();
-    await storage.write(key: 'seenIntro', value: 'true');
+    try {
+      const storage = FlutterSecureStorage();
+      await storage.write(key: 'seenIntro', value: 'true');
+    } catch (e) {
+      debugPrint('[ZAHMET_LOG] Secure storage write failed: $e');
+    }
     
     if (!mounted || _isSkipped) return;
     setState(() => _step = 0);
@@ -99,6 +131,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted || _isSkipped) return;
     setState(() => _showInput = true);
+
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted || _isSkipped) return;
+    if (_controller.text.isEmpty && !_focusNode.hasFocus) {
+      _isSkipped = true;
+      _navigateToHome();
+    }
   }
 
   void _handleSubmit(String text) async {
@@ -123,8 +162,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     await ref.read(taskProvider.notifier).addTask(text);
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const _RouterLayer()));
+    _navigateToHome();
   }
 
   @override
@@ -133,14 +171,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       backgroundColor: Colors.white,
       body: GestureDetector(
         onTap: () {
-          if (_step >= 0 && !_showInput) {
-            _isSkipped = true;
-            setState(() {
-              _step = -99;
-              _showInput = true;
-            });
-          } else if (_showInput && _focusNode.hasFocus) {
-            FocusScope.of(context).unfocus();
+          if (_step == -1) return; // Don't allow skipping consent
+          if (_step >= 0) {
+            if (_showInput && _focusNode.hasFocus) {
+              FocusScope.of(context).unfocus();
+            } else {
+              _isSkipped = true;
+              _navigateToHome();
+            }
           }
         },
         onDoubleTap: () {
@@ -243,8 +281,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               onPressed: () async {
-                const storage = FlutterSecureStorage();
-                await storage.write(key: 'hasConsented_v2', value: 'true');
+                try {
+                  const storage = FlutterSecureStorage();
+                  await storage.write(key: 'hasConsented_v2', value: 'true');
+                } catch (e) {
+                  debugPrint('[ZAHMET_LOG] Secure storage write failed: $e');
+                }
                 _startSequence();
               },
               child: Text(AppTexts.splashConsentButton, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),

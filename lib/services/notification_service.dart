@@ -9,71 +9,84 @@ class NotificationService {
 
   static Future<void> initialize() async {
     if (kIsWeb) return;
-    tz.initializeTimeZones();
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings();
-    const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
-    
-    await _notificationsPlugin.initialize(settings: initSettings);
+    try {
+      tz.initializeTimeZones();
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings();
+      const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
+      
+      await _notificationsPlugin.initialize(settings: initSettings);
+    } catch (e) {
+      debugPrint('[ZAHMET_LOG] Notification init failed: $e');
+    }
   }
 
   static Future<void> scheduleTimeBomb() async {
     if (kIsWeb) return;
-    final now = tz.TZDateTime.now(tz.local);
-    final scheduledDate = now.add(const Duration(hours: 3));
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      final scheduledDate = now.add(const Duration(hours: 3));
 
-    await _notificationsPlugin.zonedSchedule(
-      id: 0,
-      title: AppTexts.notifTitle,
-      body: AppTexts.notifBody,
-      scheduledDate: scheduledDate,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'trip_channel',
-          'Trip Notifications',
-          channelDescription: 'passive aggressive reminders',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
+      await _notificationsPlugin.zonedSchedule(
+        id: 0,
+        title: AppTexts.notifTitle,
+        body: AppTexts.notifBody,
+        scheduledDate: scheduledDate,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'trip_channel',
+            'Trip Notifications',
+            channelDescription: 'passive aggressive reminders',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } catch (e) {
+      debugPrint('[ZAHMET_LOG] Failed to schedule time bomb: $e');
+    }
   }
 
   static Future<void> scheduleDailyReminder() async {
     if (kIsWeb) return;
-    
-    // Schedule for 8:00 PM every day
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20);
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
+    try {
+      // Schedule for 8:00 PM every day
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20);
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
 
-    await _notificationsPlugin.zonedSchedule(
-      id: 1, // Use a different ID from time bomb
-      title: 'Zahmet',
-      body: AppTexts.kekstraDailyReminder ?? 'Hâlâ yapmadığın görevler var, umursamazlık seviyen göz yaşartıcı.',
-      scheduledDate: scheduledDate,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_channel',
-          'Daily Reminders',
-          channelDescription: 'daily passive aggressive reminders',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
+      await _notificationsPlugin.zonedSchedule(
+        id: 1, // Use a different ID from time bomb
+        title: 'Zahmet',
+        body: AppTexts.kekstraDailyReminder ?? 'Hâlâ yapmadığın görevler var, umursamazlık seviyen göz yaşartıcı.',
+        scheduledDate: scheduledDate,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'daily_channel',
+            'Daily Reminders',
+            channelDescription: 'daily passive aggressive reminders',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {
+      debugPrint('[ZAHMET_LOG] Failed to schedule daily reminder: $e');
+    }
   }
 
   static Future<void> cancelTimeBomb() async {
     if (kIsWeb) return;
-    await _notificationsPlugin.cancel(id: 0);
+    try {
+      await _notificationsPlugin.cancel(id: 0);
+    } catch (e) {}
   }
 
   static Future<void> showNotification({required int id, required String title, required String body}) async {
