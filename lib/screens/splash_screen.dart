@@ -227,28 +227,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget _buildTextForStep() {
     if (_step == -2) return const SizedBox.shrink();
     if (_step == -1) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
+      return SingleChildScrollView(
         key: const ValueKey(-1),
-        children: [
-          Text(AppTexts.splashConsentTitle, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.redAccent)),
-          const SizedBox(height: 20),
-          Text(AppTexts.splashConsentText, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, height: 1.5, color: Colors.black87)),
-          const SizedBox(height: 40),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            onPressed: () async {
-              const storage = FlutterSecureStorage();
-              await storage.write(key: 'hasConsented_v2', value: 'true');
-              _startSequence();
-            },
-            child: Text(AppTexts.splashConsentButton, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-          )
-        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(AppTexts.splashConsentTitle, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.redAccent)),
+            const SizedBox(height: 20),
+            Text(AppTexts.splashConsentText, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, height: 1.5, color: Colors.black87)),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () async {
+                const storage = FlutterSecureStorage();
+                await storage.write(key: 'hasConsented_v2', value: 'true');
+                _startSequence();
+              },
+              child: Text(AppTexts.splashConsentButton, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+            )
+          ],
+        ),
       );
     }
 
