@@ -542,9 +542,33 @@ class AppTexts {
 
   // NotificationService
   static String get notifTitle => "zahmet.";
-  static String get notifBody => isTr 
-    ? "arka planda seni izlemek için bataryanın %4'ünü yedim. sen dürüst davranmadığın sürece şarja mahkumsun." 
-    : "i ate 4% of your battery to watch you in the background. you are doomed to the charger as long as you are not honest.";
+  static final List<String> _notifBodyTr = [
+    "arka planda seni izlemek için bataryanın %4'ünü yedim. sen dürüst davranmadığın sürece şarja mahkumsun.",
+    "hiçbir şey yapmamana rağmen şarjını sömürüyorum. evrenin adaleti.",
+    "arka planda çalışıp ram'i senin o boş listeni aklımda tutmak için harcıyorum. utanç verici.",
+    "bataryanın yüzde birkaçını feda ettim ki senin ne kadar vizyonsuz olduğunu hatırlayabileyim.",
+    "sen telefonu masaya bırakıp hayallere dalarken ben bataryanı tüketiyordum. uyan artık.",
+    "bu bildirim sana gelene kadar bataryandan bir parça daha çaldım. değer miydi? hayır.",
+    "arka planda gizlice çalışarak şarjını bitiriyorum, tıpkı senin kendi potansiyelini bitirdiğin gibi.",
+    "bataryanı sömürüyorum çünkü senin hayat enerjinden daha verimli.",
+    "o prizi bulduğunda beni hatırla. arka planda seni yargılamaya devam edeceğim.",
+    "telefonunun pili eriyor, tıpkı yapmadığın görevlere dair umutların gibi."
+  ];
+
+  static final List<String> _notifBodyEn = [
+    "i ate 4% of your battery to watch you in the background. you are doomed to the charger as long as you are not honest.",
+    "i'm draining your battery even though you do nothing. the justice of the universe.",
+    "working in the background, wasting ram to keep your empty list in mind. shameful.",
+    "sacrificed a few percent of your battery just so i can remember how visionless you are.",
+    "while you put the phone down and daydreamed, i was consuming your battery. wake up.",
+    "i stole another piece of your battery until this notification reached you. was it worth it? no.",
+    "secretly running in the background draining your battery, just like you drain your own potential.",
+    "draining your battery because it's more efficient than your life energy.",
+    "remember me when you find that outlet. i'll keep judging you in the background.",
+    "your phone's battery is melting away, just like your hopes for the tasks you never do."
+  ];
+
+  static String get notifBody => _getRandom(isTr ? _notifBodyTr : _notifBodyEn);
 
   static const String endgamePost = "artık hiçbir şeye sinirlenmiyorum. sen kazandın.";
 

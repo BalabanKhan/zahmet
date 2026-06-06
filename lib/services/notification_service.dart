@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -23,6 +24,8 @@ class NotificationService {
 
   static Future<void> scheduleTimeBomb() async {
     if (kIsWeb) return;
+    if (Random().nextDouble() > 0.01) return; // %1 ihtimalle çalışır
+    
     try {
       final now = tz.TZDateTime.now(tz.local);
       final scheduledDate = now.add(const Duration(hours: 3));
