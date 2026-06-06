@@ -33,6 +33,7 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
     final battery = Battery();
     final level = await battery.batteryLevel;
     if (level < 5) {
+      if (!mounted) return;
       FocusScope.of(context).unfocus();
       _controller.clear();
       if (mounted) {
@@ -52,6 +53,7 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
     }
 
     if (response.whisperMessage != null) {
+      if (!mounted) return;
       FocusScope.of(context).unfocus();
       widget.onWhisperMessage(response.whisperMessage!);
     }

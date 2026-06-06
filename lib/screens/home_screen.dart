@@ -67,6 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       final gY = event.y.abs();
       if (gX > 15 || gY > 15) {
         if (!_isShaking) {
+          if (!mounted) return;
           setState(() => _isShaking = true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppTexts.kekstraShake, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
@@ -210,6 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
       final clipboardData = await Clipboard.getData('text/plain');
       if (clipboardData != null && clipboardData.text != null && clipboardData.text!.isNotEmpty) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

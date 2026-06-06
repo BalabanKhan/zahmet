@@ -65,7 +65,7 @@ class NotificationService {
       await _notificationsPlugin.zonedSchedule(
         id: 1, // Use a different ID from time bomb
         title: 'Zahmet',
-        body: AppTexts.kekstraDailyReminder ?? 'Hâlâ yapmadığın görevler var, umursamazlık seviyen göz yaşartıcı.',
+        body: AppTexts.kekstraDailyReminder,
         scheduledDate: scheduledDate,
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
