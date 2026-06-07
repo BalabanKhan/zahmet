@@ -32,6 +32,8 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
   String? _currentLeftLabel;
   String? _currentRightLabel;
   final double _threshold = 120.0;
+  bool _isCompleting = false;
+  String _completingText = '';
 
   @override
   void initState() {
@@ -72,7 +74,10 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
       final taskNotifier = ref.read(taskProvider.notifier);
       final lower = widget.task.text.toLowerCase();
       
-      if (AppTexts.cameraKeywords.any((k) => lower.contains(k))) {
+      final bool needsCameraCheck = AppTexts.cameraKeywords.any((k) => lower.contains(k)) || 
+                                   (math.Random().nextDouble() < 0.10); // 10% optional random check
+
+      if (needsCameraCheck) {
         final status = await Permission.camera.status;
         if (!status.isGranted && mounted) {
           Navigator.of(context).push(MaterialPageRoute(
@@ -93,8 +98,22 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
         }
         _resetDrag();
       } else {
+        setState(() {
+          _isCompleting = true;
+          _completingText = AppTexts.waitComplete;
+        });
+        _resetDrag();
+        
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (!mounted) return;
+
         final message = await taskNotifier.completeTask(widget.task.id);
         if (!mounted) return;
+
+        setState(() {
+          _isCompleting = false;
+        });
+
         if (message == 'ENDGAME_SIGNAL') {
           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const EndgameScreen()));
           return;
@@ -112,7 +131,7 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
         if (message != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(message, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)),
+              content: Text(message, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)),
               backgroundColor: Colors.black87,
               duration: const Duration(seconds: 4),
             ),
@@ -123,7 +142,7 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
           final infoText = useDisbelief ? AppTexts.disbelief : AppTexts.complete;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(infoText, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)),
+              content: Text(infoText, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)),
               backgroundColor: Colors.black87,
               duration: const Duration(seconds: 4),
               action: showUndo
@@ -138,15 +157,15 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
             ),
           );
         }
-        _resetDrag();
       }
     } else if (_dragExtent < -_threshold) {
       // Swipe Left -> Postpone task
+      HapticFeedback.heavyImpact();
       final message = await ref.read(taskProvider.notifier).postponeTask(widget.task.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(message ?? AppTexts.postpone, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)),
+            content: Text(message ?? AppTexts.postpone, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)),
             backgroundColor: Colors.black87,
             duration: const Duration(seconds: 2),
           ),
@@ -176,14 +195,14 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
                 context: context,
                 builder: (ctx) => AlertDialog(
                   backgroundColor: Colors.black,
-                  title: Text("düzenle", style: GoogleFonts.roboto(color: Colors.white)),
+                  title: Text(AppTexts.edit, style: GoogleFonts.inter(color: Colors.white)),
                   content: SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: TextField(
                       controller: ctrl,
                       maxLines: null,
                       minLines: 3,
-                      style: GoogleFonts.roboto(color: Colors.white),
+                      style: GoogleFonts.inter(color: Colors.white),
                       decoration: const InputDecoration(
                         enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
                         focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
@@ -193,7 +212,7 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: Text("iptal", style: GoogleFonts.roboto(color: Colors.grey)),
+                      child: Text(AppTexts.cancel, style: GoogleFonts.inter(color: Colors.grey)),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -201,11 +220,11 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
                         if (ctrl.text.trim() != widget.task.text && ctrl.text.trim().isNotEmpty) {
                           final msg = await ref.read(taskProvider.notifier).updateTask(widget.task.id, ctrl.text.trim());
                           if (msg != null && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
                           }
                         }
                       },
-                      child: Text("kaydet", style: GoogleFonts.roboto(color: Colors.white)),
+                      child: Text(AppTexts.save, style: GoogleFonts.inter(color: Colors.white)),
                     ),
                   ],
                 )
@@ -267,6 +286,30 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
                       alignment: Alignment.centerLeft,
                       child: Builder(
                         builder: (context) {
+                          if (_isCompleting) {
+                            return Row(
+                              children: [
+                                const SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: Colors.black45,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _completingText,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.black45,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+
                           double baseFontSize = 16.0;
                           double fontSize = baseFontSize;
                           if (widget.task.snoozeCount >= 3) {
@@ -278,32 +321,43 @@ class _TaskItemState extends ConsumerState<TaskItem> with SingleTickerProviderSt
                               : 0.0;
                           final isAlreadyLineThrough = widget.task.isPostponed;
                           
-                          return Stack(
-                            alignment: Alignment.centerLeft,
-                            children: [
-                              Text(
-                                widget.task.text,
-                                style: ThemeUtils.getTaskTextStyle(tripState, fontSize: fontSize).copyWith(
-                                  decoration: isAlreadyLineThrough ? TextDecoration.lineThrough : null,
-                                  decorationColor: isAlreadyLineThrough ? Colors.black26 : null,
-                                  decorationThickness: isAlreadyLineThrough ? 2.0 : null,
+                          // Task Decay styling
+                          final snoozeCount = widget.task.snoozeCount;
+                          final double decayOpacity = (1.0 - (snoozeCount * 0.15)).clamp(0.4, 1.0);
+                          final TextStyle baseStyle = ThemeUtils.getTaskTextStyle(tripState, fontSize: fontSize);
+                          
+                          return Opacity(
+                            opacity: decayOpacity,
+                            child: Stack(
+                              alignment: Alignment.centerLeft,
+                              children: [
+                                Text(
+                                  widget.task.text,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: baseStyle.copyWith(
+                                    fontStyle: snoozeCount > 0 ? FontStyle.italic : FontStyle.normal,
+                                    decoration: isAlreadyLineThrough ? TextDecoration.lineThrough : null,
+                                    decorationColor: isAlreadyLineThrough ? Colors.black26 : null,
+                                    decorationThickness: isAlreadyLineThrough ? 2.0 : null,
+                                  ),
                                 ),
-                              ),
-                              // Growing line-through over text as we swipe right
-                              if (lineProgress > 0 && !isAlreadyLineThrough)
-                                Positioned.fill(
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: FractionallySizedBox(
-                                      widthFactor: lineProgress,
-                                      child: Container(
-                                        height: 2,
-                                        color: Colors.black, // match square icon black tone exactly
+                                // Growing line-through over text as we swipe right
+                                if (lineProgress > 0 && !isAlreadyLineThrough)
+                                  Positioned.fill(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: FractionallySizedBox(
+                                        widthFactor: lineProgress,
+                                        child: Container(
+                                          height: 2,
+                                          color: Colors.black, // match square icon black tone exactly
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           );
                         }
                       ),

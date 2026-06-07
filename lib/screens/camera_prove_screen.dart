@@ -138,21 +138,47 @@ class _CameraProveScreenState extends ConsumerState<CameraProveScreen> {
             
             if (!_isAnalyzing)
               Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: GestureDetector(
-                  onTap: _takePicture,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: _takePicture,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                        ),
+                        child: Text(
+                          AppTexts.cameraProveButton,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      AppTexts.cameraProveButton,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        ref.read(taskProvider.notifier).completeTask(widget.taskId);
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              AppTexts.cameraBypass,
+                              style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white, fontSize: 12),
+                            ),
+                            backgroundColor: Colors.black87,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        AppTexts.isTr ? "Pas Geç (Yalanını İtiraf Et)" : "Bypass (Admit Your Lie)",
+                        style: GoogleFonts.inter(color: Colors.grey, fontSize: 13, decoration: TextDecoration.underline),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               )
           ],

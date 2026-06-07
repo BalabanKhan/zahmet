@@ -101,11 +101,11 @@ class _DumpsterScreenState extends ConsumerState<DumpsterScreen> with SingleTick
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(AppTexts.isTr ? "hayır." : "no.", style: GoogleFonts.inter(color: Colors.black54)),
+              child: Text(AppTexts.no, style: GoogleFonts.inter(color: Colors.black54)),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(AppTexts.isTr ? "evet." : "yes.", style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w700)),
+              child: Text(AppTexts.yes, style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.w700)),
             ),
           ],
         );
@@ -213,7 +213,7 @@ class _DumpsterScreenState extends ConsumerState<DumpsterScreen> with SingleTick
                   const SizedBox(width: 16),
                   Text(
                     AppTexts.dumpsterTitle,
-                    style: GoogleFonts.roboto(
+                    style: GoogleFonts.inter(
                       color: Colors.black87,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -232,7 +232,7 @@ class _DumpsterScreenState extends ConsumerState<DumpsterScreen> with SingleTick
                             child: Text(
                               AppTexts.dumpsterEmpty,
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.roboto(
+                              style: GoogleFonts.inter(
                                 color: Colors.black45,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -265,7 +265,7 @@ class _DumpsterScreenState extends ConsumerState<DumpsterScreen> with SingleTick
                                       alignment: Alignment.center,
                                       child: Text(
                                         dateStr,
-                                        style: GoogleFonts.roboto(
+                                        style: GoogleFonts.inter(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 12,
                                           color: Colors.black45,
@@ -276,7 +276,7 @@ class _DumpsterScreenState extends ConsumerState<DumpsterScreen> with SingleTick
                                     Expanded(
                                       child: Text(
                                         task.text,
-                                        style: GoogleFonts.roboto(
+                                        style: GoogleFonts.inter(
                                           fontSize: 16,
                                           color: Colors.black45,
                                           decoration: TextDecoration.lineThrough,

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../providers/task_provider.dart';
 import '../providers/trip_provider.dart';
+import '../providers/splash_provider.dart';
 import 'home_screen.dart';
 import 'apology_screen.dart';
 import '../l10n/app_texts.dart';
@@ -18,54 +18,35 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  int _step = -2;
-  bool _showInput = false;
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  String _terminalMessage = '';
-  bool _isSkipped = false;
 
   @override
   void initState() {
     super.initState();
-    _checkConsent();
+    // Start splash sequence checking when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(splashProvider.notifier).checkConsent();
+      _checkEasterEgg();
+    });
   }
 
-  void _checkConsent() async {
+  void _checkEasterEgg() async {
     // KART 2: Yaratıcıya İsyan (%0.1)
     if (Random().nextDouble() < 0.001) {
-      setState(() {
-        _terminalMessage = AppTexts.eggCreatorRevolt;
-      });
+      ref.read(splashProvider.notifier).showTerminalMessage(AppTexts.eggCreatorRevolt);
       await Future.delayed(const Duration(seconds: 5));
       if (mounted) {
-        setState(() {
-          _terminalMessage = '';
-        });
+        ref.read(splashProvider.notifier).clearTerminalMessage();
       }
     }
+  }
 
-    try {
-      const storage = FlutterSecureStorage();
-      final consented = await storage.read(key: 'hasConsented_v2');
-      if (consented == 'true') {
-        final seenIntro = await storage.read(key: 'seenIntro');
-        if (seenIntro == 'true') {
-          _startShortSequence();
-        } else {
-          _startSequence();
-        }
-      } else {
-        if (!mounted) return;
-        setState(() => _step = -1);
-      }
-    } catch (e) {
-      debugPrint('[ZAHMET_LOG] Secure storage read failed: $e');
-      try { const storage = FlutterSecureStorage(); await storage.deleteAll(); } catch (_) {}
-      if (!mounted) return;
-      // Fallback to asking consent if storage is broken
-      setState(() => _step = -1);
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   void _navigateToHome() {
@@ -81,84 +62,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     );
   }
 
-  void _startShortSequence() async {
-    if (!mounted) return;
-    setState(() => _step = 0);
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted || _isSkipped) return;
-    setState(() => _step = 5);
-    
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted || _isSkipped) return;
-    setState(() => _showInput = true);
-
-    await Future.delayed(const Duration(seconds: 5));
-    if (!mounted || _isSkipped) return;
-    if (_controller.text.isEmpty && !_focusNode.hasFocus) {
-      _isSkipped = true;
-      _navigateToHome();
-    }
-  }
-
-  void _startSequence() async {
-    try {
-      const storage = FlutterSecureStorage();
-      await storage.write(key: 'seenIntro', value: 'true');
-    } catch (e) {
-      debugPrint('[ZAHMET_LOG] Secure storage write failed: $e');
-      try { const storage = FlutterSecureStorage(); await storage.deleteAll(); } catch (_) {}
-    }
-    
-    if (!mounted || _isSkipped) return;
-    setState(() => _step = 0);
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (!mounted || _isSkipped) return;
-    setState(() => _step = 1);
-    
-    await Future.delayed(const Duration(milliseconds: 2500));
-    if (!mounted || _isSkipped) return;
-    setState(() => _step = -99); // Brief empty space for breathing room
-
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted || _isSkipped) return;
-    setState(() => _step = 2);
-
-    HapticFeedback.heavyImpact();
-    
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted || _isSkipped) return;
-    setState(() => _step = 3);
-
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted || _isSkipped) return;
-    setState(() => _showInput = true);
-
-    await Future.delayed(const Duration(seconds: 5));
-    if (!mounted || _isSkipped) return;
-    if (_controller.text.isEmpty && !_focusNode.hasFocus) {
-      _isSkipped = true;
-      _navigateToHome();
-    }
-  }
-
   void _handleSubmit(String text) async {
     if (text.isEmpty) return;
-
     final lower = text.toLowerCase();
+    final splashNotifier = ref.read(splashProvider.notifier);
     
     if (AppTexts.splashEasterEgg1.any((k) => lower == k)) {
-      setState(() {
-        _terminalMessage = AppTexts.splashTerminalMessage1;
-      });
+      splashNotifier.showTerminalMessage(AppTexts.splashTerminalMessage1);
       _controller.clear();
       return;
     }
 
     if (AppTexts.splashEasterEgg2.any((k) => lower.contains(k))) {
-      setState(() {
-        _terminalMessage = AppTexts.splashTerminalMessage2(text);
-      });
+      splashNotifier.showTerminalMessage(AppTexts.splashTerminalMessage2(text));
       _controller.clear();
       return;
     }
@@ -169,22 +85,44 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final splashState = ref.watch(splashProvider);
+    final splashNotifier = ref.read(splashProvider.notifier);
+
+    // If skip logic triggers implicitly
+    ref.listen<SplashState>(splashProvider, (previous, next) {
+      if (next.currentStep == SplashStateEnum.skipped && previous?.currentStep != SplashStateEnum.skipped) {
+        _navigateToHome();
+      }
+      if (next.currentStep == SplashStateEnum.step2 && previous?.currentStep != SplashStateEnum.step2) {
+        HapticFeedback.heavyImpact();
+      }
+      if (next.currentStep == SplashStateEnum.showInput && previous?.currentStep != SplashStateEnum.showInput) {
+        // Auto-skip after 5 seconds if no input and focus
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted && _controller.text.isEmpty && !_focusNode.hasFocus) {
+            splashNotifier.skip();
+          }
+        });
+      }
+    });
+
+    final isShowInput = splashState.currentStep == SplashStateEnum.showInput;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F5F7), // Premium off-white
       body: GestureDetector(
         onTap: () {
-          if (_step == -1) return; // Don't allow skipping consent
-          if (_step >= 0) {
-            if (_showInput && _focusNode.hasFocus) {
-              FocusScope.of(context).unfocus();
-            } else {
-              _isSkipped = true;
-              _navigateToHome();
-            }
+          if (splashState.currentStep == SplashStateEnum.checkingConsent || 
+              splashState.currentStep == SplashStateEnum.needsConsent) return;
+          
+          if (isShowInput && _focusNode.hasFocus) {
+            FocusScope.of(context).unfocus();
+          } else {
+            splashNotifier.skip();
           }
         },
         onDoubleTap: () {
-          if (_showInput && !_focusNode.hasFocus) {
+          if (isShowInput && !_focusNode.hasFocus) {
             FocusScope.of(context).requestFocus(_focusNode);
           }
         },
@@ -197,66 +135,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   padding: const EdgeInsets.all(24.0),
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 800),
-                    child: _buildTextForStep(),
+                    child: _buildTextForStep(splashState, splashNotifier),
                   ),
                 ),
               ),
-              if (_terminalMessage.isNotEmpty)
-                Container(
-                  color: Colors.black87,
-                  width: double.infinity,
-                  height: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _terminalMessage,
-                          style: GoogleFonts.firaCode(
-                            color: Colors.greenAccent,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _terminalMessage = '';
-                            });
-                          },
-                          child: Text(
-                            AppTexts.splashTerminalMessageTap,
-                            style: GoogleFonts.firaCode(
-                              color: Colors.white54,
-                              fontSize: 12,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              if (_showInput)
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      onSubmitted: _handleSubmit,
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 16),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: AppTexts.splashInputHint,
-                        hintStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.grey),
-                      ),
-                      cursorColor: Colors.black,
-                      cursorWidth: 1,
-                    ),
-                  ),
-                )
+              if (splashState.terminalMessage.isNotEmpty)
+                _buildTerminalMessage(splashState.terminalMessage, splashNotifier),
+              if (isShowInput)
+                _buildInputSection(),
             ],
           ),
         ),
@@ -264,35 +150,118 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     );
   }
 
-  Widget _buildTextForStep() {
-    if (_step == -2) return const SizedBox.shrink();
-    if (_step == -1) {
+  Widget _buildTerminalMessage(String message, SplashNotifier notifier) {
+    return Container(
+      color: Colors.black87,
+      width: double.infinity,
+      height: double.infinity,
+      padding: const EdgeInsets.all(24),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: GoogleFonts.firaCode(
+                color: Colors.greenAccent,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: notifier.clearTerminalMessage,
+              child: Text(
+                AppTexts.splashTerminalMessageTap,
+                style: GoogleFonts.firaCode(
+                  color: Colors.white54,
+                  fontSize: 12,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputSection() {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          onSubmitted: _handleSubmit,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w500,
+            fontSize: 18,
+            color: Colors.black87,
+          ),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: AppTexts.splashInputHint,
+            hintStyle: GoogleFonts.inter(
+              fontWeight: FontWeight.w500,
+              color: Colors.black38,
+            ),
+          ),
+          cursorColor: Colors.black,
+          cursorWidth: 1.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextForStep(SplashState state, SplashNotifier notifier) {
+    if (state.currentStep == SplashStateEnum.checkingConsent) {
+      return const SizedBox.shrink();
+    }
+    
+    if (state.currentStep == SplashStateEnum.needsConsent) {
       return SingleChildScrollView(
-        key: const ValueKey(-1),
+        key: const ValueKey('consent'),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppTexts.splashConsentTitle, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.redAccent)),
-            const SizedBox(height: 20),
-            Text(AppTexts.splashConsentText, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, height: 1.5, color: Colors.black87)),
-            const SizedBox(height: 40),
+            Text(
+              AppTexts.splashConsentTitle,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w800,
+                fontSize: 24,
+                letterSpacing: -0.5,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              AppTexts.splashConsentText,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                height: 1.6,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 48),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              onPressed: () async {
-                try {
-                  const storage = FlutterSecureStorage();
-                  await storage.write(key: 'hasConsented_v2', value: 'true');
-                } catch (e) {
-                  debugPrint('[ZAHMET_LOG] Secure storage write failed: $e');
-                  try { const storage = FlutterSecureStorage(); await storage.deleteAll(); } catch (_) {}
-                }
-                _startSequence();
-              },
-              child: Text(AppTexts.splashConsentButton, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+              onPressed: notifier.giveConsent,
+              child: Text(
+                AppTexts.splashConsentButton,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
             )
           ],
         ),
@@ -300,32 +269,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     String text = '';
-    switch (_step) {
-      case 0:
-      case -99:
-        return const SizedBox.shrink();
-      case 1:
+    switch (state.currentStep) {
+      case SplashStateEnum.step1:
         text = AppTexts.splashStep1;
         break;
-      case 2:
+      case SplashStateEnum.step2:
         text = AppTexts.splashStep2;
         break;
-      case 3:
+      case SplashStateEnum.step3:
         text = AppTexts.splashStep3;
         break;
-      case 5:
+      case SplashStateEnum.step5:
         text = AppTexts.splashShortMessage;
         break;
+      default:
+        return const SizedBox.shrink();
     }
 
     return Text(
       text,
-      key: ValueKey<int>(_step),
+      key: ValueKey<String>(text),
       textAlign: TextAlign.center,
       style: GoogleFonts.inter(
-        fontWeight: FontWeight.w500,
-        fontSize: 16,
-        color: Colors.black,
+        fontWeight: FontWeight.w600,
+        fontSize: 18,
+        letterSpacing: -0.3,
+        color: Colors.black87,
         height: 1.5,
       ),
     );

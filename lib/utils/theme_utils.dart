@@ -13,7 +13,7 @@ class ThemeUtils {
     }
     
     // Normal & PassiveAggressive state
-    return GoogleFonts.roboto(
+    return GoogleFonts.inter(
       fontSize: fontSize,
       fontWeight: FontWeight.w500, // Very thin
       color: const Color(0xFF757575), // Careless pale grey, but slightly darker

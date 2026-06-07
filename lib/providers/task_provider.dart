@@ -137,6 +137,12 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
       finalTxt = NlpService.analyzeAndReact(finalTxt);
     }
 
+    // Late Night Motivation: 1 AM to 5 AM
+    if (now.hour >= 1 && now.hour < 5) {
+      finalTxt = AppTexts.isTr ? "[GECE YALANI] $finalTxt" : "[LATE NIGHT LIE] $finalTxt";
+      kekstraMessage = AppTexts.lateNightWarning;
+    }
+
     final task = TaskModel()
       ..text = finalTxt
       ..createdAt = now

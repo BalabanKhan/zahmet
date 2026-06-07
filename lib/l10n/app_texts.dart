@@ -29,7 +29,11 @@ class AppTexts {
     "vitrin değilim ben. boş yapma, kapat.",
     "senin hayatına düzen getirmek evrenin en büyük israfı.",
     "çık git uygulamadan. şarjımdan yiyorsun.",
-    "bana bakma, ayna değilim."
+    "bana bakma, ayna değilim.",
+    "boş.",
+    "...",
+    "git yat.",
+    "vizyonsuz."
   ];
   static final List<String> _emptyTasksEn = [
     "no tasks. empty just like your life.",
@@ -51,7 +55,11 @@ class AppTexts {
     "i'm not a display window. stop wasting time, close me.",
     "organizing your life is the universe's biggest waste.",
     "get out of the app. you're draining my battery.",
-    "don't look at me, i'm not a mirror."
+    "don't look at me, i'm not a mirror.",
+    "empty.",
+    "...",
+    "go sleep.",
+    "visionless."
   ];
   static String get emptyTasks => _getRandom(isTr ? _emptyTasksTr : _emptyTasksEn);
 
@@ -76,7 +84,12 @@ class AppTexts {
     "seni dinliyorum. maalesef.",
     "yeni bir erteleme serüveni başlat...",
     "dürüst ol. bunu yapacak iraden var mı?",
-    "zahmet edip de yazacağın o basit şey..."
+    "zahmet edip de yazacağın o basit şey...",
+    "yaz.",
+    "...",
+    "hadi.",
+    "ne uyduracaksın?",
+    "çok meşgulmüş gibi yaz."
   ];
   static final List<String> _hintTextEn = [
     "write your new burden here...",
@@ -98,7 +111,12 @@ class AppTexts {
     "i'm listening. unfortunately.",
     "start a new procrastination journey...",
     "be honest. do you have the will to do this?",
-    "that simple thing you'll bother to write..."
+    "that simple thing you'll bother to write...",
+    "type.",
+    "...",
+    "come on.",
+    "what's the lie?",
+    "type like you're so busy."
   ];
   static String get hintText => _getRandom(isTr ? _hintTextTr : _hintTextEn);
 
@@ -133,7 +151,16 @@ class AppTexts {
     "bunu sildiğim için şükret. listeni o kadar uzun süre işgal etti ki kira isteyecektim.",
     "basit bir işi bitirdin diye kendini tesla sanmana gerek yok.",
     "aferin. yarın yine aynı tembellikle burada olacağını biliyoruz.",
-    "sildim. içten içe yarım yamalak yaptığını biliyorsun."
+    "sildim. içten içe yarım yamalak yaptığını biliyorsun.",
+    "pff.",
+    "neyse.",
+    "şov yapma.",
+    "sildim.",
+    "çok çalışıyormuş gibi davranma.",
+    "günde 10 tane iş girince kendini ceo sanıyorsun değil mi?",
+    "kurumsal köleliğe devam.",
+    "tamam anladık, çok meşgulsün.",
+    "alt tarafı bir iş yaptın."
   ];
   static final List<String> _completeEn = [
     "deleted. don't expect a medal from me for doing this.",
@@ -165,7 +192,16 @@ class AppTexts {
     "be thankful i deleted it. it occupied my list so long i was about to charge rent.",
     "no need to think you're tesla just because you finished a simple task.",
     "good job. we know you'll be here with the same laziness tomorrow.",
-    "deleted. deep down you know you half-assed it."
+    "deleted. deep down you know you half-assed it.",
+    "whatever.",
+    "pff.",
+    "don't show off.",
+    "deleted.",
+    "stop acting like you're working hard.",
+    "checking off 10 tasks makes you think you're a ceo, huh?",
+    "back to corporate slavery.",
+    "we get it, you're very busy.",
+    "you just did one thing. calm down."
   ];
   static String get complete => _getRandom(isTr ? _completeTr : _completeEn);
   static String get completeLabel => isTr ? "yok et." : "destroy.";
@@ -201,7 +237,14 @@ class AppTexts {
     "yarın sana yeni bir irade mi yüklenecek sanıyorsun? kaydırdım.",
     "klavyemde 'hemen sil' tuşu olsaydı bu görevi sana sormadan yok ederdim. neyse, yarın görüşürüz.",
     "o görev orada o kadar çok duracak ki, yakında aramızda duygusal bir bağ oluşacak.",
-    "kaçıncı erteleyişin bu? kod bloklarım senin yüzünden utanıyor."
+    "kaçıncı erteleyişin bu? kod bloklarım senin yüzünden utanıyor.",
+    "klasik.",
+    "şaşırtmadın.",
+    "attım.",
+    "pff.",
+    "buna sen bile inanmadın.",
+    "göz devirdim.",
+    "yarın da yapmayacaksın."
   ];
   static final List<String> _postponeEn = [
     "'tomorrow'. we both know that day will never come.",
@@ -233,10 +276,23 @@ class AppTexts {
     "think a new willpower update will be installed tomorrow? swiped.",
     "if my keyboard had an 'auto-delete' button, i'd destroy this without asking. anyway, see you tomorrow.",
     "that task will sit there so long, we'll form an emotional bond soon.",
-    "how many times is this? my code blocks are blushing because of you."
+    "how many times is this? my code blocks are blushing because of you.",
+    "classic.",
+    "not surprised.",
+    "tossed.",
+    "whatever.",
+    "even you didn't believe that.",
+    "rolled my eyes.",
+    "you won't do it tomorrow either."
   ];
   static String get postpone => _getRandom(isTr ? _postponeTr : _postponeEn);
   static String get postponeLabel => isTr ? "yarına at." : "throw to tomorrow.";
+  static String get yes => isTr ? "evet." : "yes.";
+  static String get no => isTr ? "hayır." : "no.";
+  static String get ok => isTr ? "tamam" : "ok";
+  static String get edit => isTr ? "düzenle" : "edit";
+  static String get cancel => isTr ? "iptal" : "cancel";
+  static String get save => isTr ? "kaydet" : "save";
 
   // KEKSTRA TEXTS
   // Kekstra 1: Speedrun
@@ -821,4 +877,84 @@ class AppTexts {
     "if you say so."
   ];
   static String get disbelief => _getRandom(isTr ? _disbeliefTr : _disbeliefEn);
+
+  // Lock bypass sarcasm strings
+  static final List<String> _lockBypassTr = [
+    "tabii ki kaçtın. korkak.",
+    "bypass butonunu erteleme tuşu kadar hızlı buldun. bravo.",
+    "zorluğa gelemedin değil mi? şaşırtmadı.",
+    "tamam, kuralı esnetiyorum. senin zayıf iradene acıdım.",
+    "kaç bakalım, nereye kadar kaçacaksın.",
+    "bunu yapamayacağını biliyordum zaten, geç git.",
+    "iradeni bypass ettin. tebrikler."
+  ];
+  static final List<String> _lockBypassEn = [
+    "of course you ran away. coward.",
+    "you found the bypass button as fast as the snooze button. bravo.",
+    "couldn't handle the pressure, huh? not surprised.",
+    "fine, i'm bending the rules. i pitied your weak willpower.",
+    "run along, let's see how far you get.",
+    "i knew you couldn't do it anyway, move on.",
+    "you just bypassed your own will. congrats."
+  ];
+  static String get lockBypass => _getRandom(isTr ? _lockBypassTr : _lockBypassEn);
+
+  // Camera bypass sarcasm strings
+  static final List<String> _cameraBypassTr = [
+    "kanıtlayamadın tabii. yalan söylediğini ikimiz de biliyoruz.",
+    "kamerayı açacak cesaretin yok değil mi? pasaklı.",
+    "tamam, yalanını doğru kabul etmiş gibi yapıyorum. mutlu ol.",
+    "fotoğraf çekmekten kaçtın. vicdanın sızladı mı?",
+    "kanıt yoksa başarı da yok. sadece siliyorum.",
+    "gerçeklerle yüzleşmek istemedin. klasik.",
+    "yalanın tescillendi, neyse."
+  ];
+  static final List<String> _cameraBypassEn = [
+    "couldn't prove it of course. we both know you lied.",
+    "don't have the courage to open the camera, do you? messy.",
+    "fine, i'll pretend to believe your lie. be happy.",
+    "you dodged the photo proof. conscience hurt?",
+    "no proof, no success. just deleting it.",
+    "didn't want to face reality. classic.",
+    "your lie is registered. whatever."
+  ];
+  static String get cameraBypass => _getRandom(isTr ? _cameraBypassTr : _cameraBypassEn);
+
+  // Lock overlay text
+  static String get lockMessage => isTr
+      ? "bu görevi 3 kez erteledin.\n\niradeni test etmek için ekranı kilitledim. bu işi yapmadan yeni görev ekleyemezsin.\n\ngerçekten yaptın mı, yoksa yine kaçacak mısın?"
+      : "you postponed this task 3 times.\n\ni locked the screen to test your willpower. you can't add new tasks until you do this.\n\ndid you actually do it, or will you run away again?";
+  static String get lockBypassButton => isTr ? "kaç (bypass et ve lafı ye)" : "run away (bypass and eat the sarcasm)";
+
+  // Late night popup message
+  static String get lateNightWarning => isTr
+      ? "gece uykusuzluktan gaza gelip yazdığın bu yalana sabah sen de güleceksin. ama kaydettim, sabah yüzüne vurmak için."
+      : "you'll laugh at this lie you wrote hyped up on insomnia in the morning too. but i saved it, just to rub it in your face.";
+
+  // Wall of Shame
+  static String get wallOfShameTitle => isTr ? "utanç tablosu" : "wall of shame";
+  static String get wallOfShameSubtitle => isTr
+      ? "en çok ertelediğin (veya asla yapamayacağın) o yalanlar:"
+      : "those lies you postpone the most (or will never do):";
+  static String wallOfShameTimes(int count) => isTr ? "$count kez ertelendi" : "postponed $count times";
+
+  // Delayed tick waiting messages
+  static final List<String> _waitCompleteTr = [
+    "gerçekten yapıldı mı?...",
+    "yalan analizi yapılıyor...",
+    "bekle...",
+    "ram taranıyor...",
+    "vicdan kontrolü...",
+    "son kez soruyorum, emin misin?..."
+  ];
+  static final List<String> _waitCompleteEn = [
+    "is it really done?...",
+    "analyzing lies...",
+    "wait...",
+    "scanning ram...",
+    "conscience check...",
+    "asking one last time, you sure?..."
+  ];
+  static String get waitComplete => _getRandom(isTr ? _waitCompleteTr : _waitCompleteEn);
 }
+

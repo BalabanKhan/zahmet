@@ -38,7 +38,7 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
       _controller.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppTexts.kekstraBattery, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
+          SnackBar(content: Text(AppTexts.kekstraBattery, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
         );
       }
       return;
@@ -60,7 +60,7 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
 
     if (response.snackBarMessage != null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response.snackBarMessage!, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response.snackBarMessage!, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
     }
 
     _controller.clear();
@@ -72,7 +72,7 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
       FocusScope.of(context).unfocus();
       _controller.text = text.substring(0, 59);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCharLimit, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCharLimit, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
       }
       return;
     }
@@ -84,7 +84,7 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
       FocusScope.of(context).unfocus();
       _controller.clear();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraBackspace, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 4)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraBackspace, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 4)));
       }
     }
   }
@@ -97,10 +97,10 @@ class _ZahmetInputWidgetState extends ConsumerState<ZahmetInputWidget> {
         controller: _controller,
         onSubmitted: _handleSubmit,
         onChanged: _onTextChanged,
-        style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black87),
+        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black87),
         decoration: InputDecoration(
           hintText: AppTexts.hintText,
-          hintStyle: GoogleFonts.roboto(color: const Color(0xFF9E9E9E), fontWeight: FontWeight.w500),
+          hintStyle: GoogleFonts.inter(color: const Color(0xFF9E9E9E), fontWeight: FontWeight.w500),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,

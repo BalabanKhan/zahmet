@@ -55,10 +55,13 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Cancel option removed
-            Padding(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            children: [
+              // Cancel option removed
+              Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -127,8 +130,9 @@ class _ApologyScreenState extends ConsumerState<ApologyScreen> {
                     ),
                 ],
               ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

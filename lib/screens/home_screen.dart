@@ -43,6 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   
   String? _whisperMessage;
   final _storage = const FlutterSecureStorage();
+  final Set<int> _bypassedLocks = {};
 
   @override
   void initState() {
@@ -70,7 +71,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           if (!mounted) return;
           setState(() => _isShaking = true);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppTexts.kekstraShake, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
+            SnackBar(content: Text(AppTexts.kekstraShake, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
           );
           Future.delayed(const Duration(seconds: 3), () {
             if (mounted) setState(() => _isShaking = false);
@@ -85,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       if (_scrollAnxietyCount > 30) {
         setState(() => _scrollLocked = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppTexts.kekstraAnxietyScroll, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
+          SnackBar(content: Text(AppTexts.kekstraAnxietyScroll, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
         );
       }
 
@@ -192,7 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(AppTexts.isTr ? "tamam" : "ok", style: GoogleFonts.inter(color: Colors.white54)),
+                  child: Text(AppTexts.ok, style: GoogleFonts.inter(color: Colors.white54)),
                 )
               ],
             ),
@@ -204,25 +205,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         final diff = DateTime.now().difference(_pausedTime!);
         if (diff.inSeconds > 15) {
            ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(AppTexts.kekstraAppSwitch, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
+             SnackBar(content: Text(AppTexts.kekstraAppSwitch, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87)
            );
         }
       }
 
-      final clipboardData = await Clipboard.getData('text/plain');
-      if (clipboardData != null && clipboardData.text != null && clipboardData.text!.isNotEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppTexts.kekstraPaste,
-              style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
+      try {
+        final clipboardData = await Clipboard.getData('text/plain');
+        if (clipboardData != null && clipboardData.text != null && clipboardData.text!.isNotEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppTexts.kekstraPaste,
+                style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
+              ),
+              backgroundColor: Colors.black87,
+              duration: const Duration(seconds: 3),
             ),
-            backgroundColor: Colors.black87,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        await Clipboard.setData(const ClipboardData(text: ''));
+          );
+          await Clipboard.setData(const ClipboardData(text: ''));
+        }
+      } catch (e) {
+        // Ignore clipboard errors (e.g., on Web without user interaction)
       }
     }
   }
@@ -231,6 +236,100 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final tasks = ref.watch(taskProvider);
+
+    // Optional Task Locking check
+    final lockedTask = tasks.firstWhere(
+      (t) => t.snoozeCount >= 3 && !_bypassedLocks.contains(t.id),
+      orElse: () => TaskModel()..id = -1,
+    );
+
+    if (lockedTask.id != -1) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(Icons.lock_outline, size: 64, color: Colors.white24),
+                const SizedBox(height: 32),
+                Text(
+                  AppTexts.lockMessage,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Text(
+                    lockedTask.text,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
+                GestureDetector(
+                  onTap: () {
+                    ref.read(taskProvider.notifier).completeTask(lockedTask.id);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    color: Colors.white,
+                    alignment: Alignment.center,
+                    child: Text(
+                      AppTexts.completeLabel,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _bypassedLocks.add(lockedTask.id);
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppTexts.lockBypass,
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
+                        ),
+                        backgroundColor: Colors.black87,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    AppTexts.lockBypassButton,
+                    style: GoogleFonts.inter(
+                      color: Colors.grey,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     if (tasks.isEmpty && _scrollLocked) {
        WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -249,7 +348,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
             if (diff >= 3 && (lower.contains('kargo') || lower.contains('iade') || lower.contains('trendyol'))) {
                if (mounted) {
                  setState(() => _cargoAlertShown = true);
-                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCargo, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 5)));
+                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraCargo, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87, duration: const Duration(seconds: 5)));
                }
                break;
             }
@@ -311,7 +410,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                   child: Text(
                     AppTexts.kekstraOrphan,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: Colors.black45, fontSize: 16, height: 1.5),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.black45, fontSize: 16, height: 1.5),
                   ),
                 ),
               Expanded(
@@ -320,7 +419,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                         color: Colors.black,
                         backgroundColor: Colors.white,
                         onRefresh: () async {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraPullRefresh, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTexts.kekstraPullRefresh, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12)), backgroundColor: Colors.black87));
                         },
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -329,7 +428,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                             Center(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                                child: Text(AppTexts.emptyTasks, textAlign: TextAlign.center, style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), height: 1.5)),
+                                child: Text(AppTexts.emptyTasks, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), height: 1.5)),
                               ),
                             ),
                           ],
@@ -348,7 +447,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                                SnackBar(
                                  content: Text(
                                    finalMsg,
-                                   style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
+                                   style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 12),
                                  ),
                                  backgroundColor: Colors.black87,
                                ),
@@ -391,7 +490,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
             padding: const EdgeInsets.all(32),
             child: Material(
               color: Colors.transparent,
-              child: Text(AppTexts.kekstraScreenshot, textAlign: TextAlign.center, style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 18)),
+              child: Text(AppTexts.kekstraScreenshot, textAlign: TextAlign.center, style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF9E9E9E), fontSize: 18)),
             ),
           ),
         ],
@@ -422,7 +521,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                 child: Text(
                   _whisperMessage!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.roboto(fontWeight: FontWeight.w500, color: Colors.black87, fontSize: 18, height: 1.5),
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.black87, fontSize: 18, height: 1.5),
                 ),
               ),
             ),

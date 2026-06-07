@@ -15,7 +15,7 @@ extension GetTaskModelCollection on Isar {
 
 const TaskModelSchema = CollectionSchema(
   name: r'Task',
-  id: 2998003626758701373,
+  id: 2998003626758701, // Trimmed for JS safe int
   properties: {
     r'completedAt': PropertySchema(
       id: 0,
